@@ -9,36 +9,85 @@
   --border: #1f2937;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
+
 body {
-  margin: 0; padding: 24px; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif;
+  margin: 0;
+  padding: 24px;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif;
   background: linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
   color: var(--text);
 }
-h1 { font-size: 1.5rem; margin: 0 0 8px; }
-.subtitle { color: var(--muted); margin-bottom: 20px; }
+
+h1 {
+  font-size: 1.5rem;
+  margin: 0 0 8px;
+}
+
+.subtitle {
+  color: var(--muted);
+  margin-bottom: 20px;
+}
 
 .container {
-  max-width: 980px; margin: 0 auto; display: grid; gap: 16px; grid-template-columns: 1.2fr 1fr;
+  margin: 0 auto;
+  display: grid;
+  gap: 16px;
 }
+
 @media (max-width: 900px) {
-  .container { grid-template-columns: 1fr; }
+  .container {
+    grid-template-columns: 1fr;
+  }
 }
 
 .card {
   background: rgba(17, 24, 39, 0.7);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 16px;
+  padding: 10px;
   backdrop-filter: blur(6px);
 }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-.grid-1 { display: grid; grid-template-columns: 1fr; gap: 12px; }
 
-label { display: block; font-weight: 600; margin-bottom: 6px; }
-.muted { color: var(--muted); font-weight: 400; }
-input[type="number"], input[type="text"] {
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  align-items: end;
+}
+
+.grid-1 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.forms {
+  display: flex;
+  flex-direction: row;
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.muted {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+input[type="number"],
+input[type="text"] {
   width: 100%;
   background: #0b1220;
   color: var(--text);
@@ -47,45 +96,234 @@ input[type="number"], input[type="text"] {
   padding: 10px 12px;
   outline: none;
 }
+
 input:focus {
   border-color: #334155;
   box-shadow: 0 0 0 3px rgba(51, 65, 85, 0.25);
 }
-.row { display: flex; gap: 8px; align-items: center; }
-.sufix { color: var(--muted); font-size: 0.9rem; min-width: 24px; text-align: right; }
+
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.sufix {
+  color: var(--muted);
+  font-size: 0.9rem;
+  min-width: 24px;
+  text-align: left;
+}
 
 .result {
-  display: flex; align-items: baseline; gap: 8px; justify-content: space-between; flex-wrap: wrap;
-  padding: 12px; border: 1px dashed #334155; border-radius: 10px; background: rgba(2,6,23,0.45);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 12px;
+  border: 1px dashed #334155;
+  border-radius: 10px;
+  background: rgba(2, 6, 23, 0.45);
 }
-.result-main { font-size: 1.8rem; font-weight: 800; color: var(--accent); }
-.result-secondary { color: var(--muted); }
 
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 8px 6px; border-bottom: 1px solid var(--border); text-align: right; }
-th:first-child, td:first-child { text-align: left; }
-.warn { color: var(--warn); }
-.danger { color: var(--danger); }
-.info { color: var(--muted); font-size: 0.92rem; }
+.result-main {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--accent);
+}
 
-.btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.result-secondary {
+  color: var(--muted);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+}
+
+th:first-child,
+td:first-child {
+  text-align: left;
+}
+
+.warn {
+  color: var(--warn);
+}
+
+.danger {
+  color: var(--danger);
+}
+
+.info {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 button {
-  background: #0b1220; color: var(--text); border: 1px solid var(--border); padding: 8px 12px;
-  border-radius: 10px; cursor: pointer; font-weight: 600;
+  background: #0b1220;
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
 }
-button.primary { background: #22c55e1a; border-color: #22c55e66; color: #bbf7d0; }
-button:hover { filter: brightness(1.05); }
+
+button.primary {
+  background: #22c55e1a;
+  border-color: #22c55e66;
+  color: #bbf7d0;
+}
+
+button:hover {
+  filter: brightness(1.05);
+}
 
 /* Utility spacing */
-.mt-0 { margin-top: 0 !important; }
-.mt-8 { margin-top: 8px !important; }
-.mt-10 { margin-top: 10px !important; }
-.mt-12 { margin-top: 12px !important; }
+.mt-0 {
+  margin-top: 0 !important;
+}
+
+.mt-8 {
+  margin-top: 8px !important;
+}
+
+.mt-10 {
+  margin-top: 10px !important;
+}
+
+.mt-12 {
+  margin-top: 12px !important;
+}
+
+/* Market quick forms */
+.market-flex {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 8px;
+  align-items: start;
+}
+@media (max-width: 1200px) {
+  .market-flex { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 800px) {
+  .market-flex { grid-template-columns: 1fr; }
+}
+
+.detail-col {
+  background: rgba(17,24,39,0.35);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+}
+.detail-col h2 { font-size: 1.05rem; margin: 0 0 8px; }
+
+.market-card {
+  background: rgba(2, 6, 23, 0.45);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  /* default accent inherits from root */
+}
+
+.market-card h4 {
+  margin: 0 0 8px;
+}
+
+.market-result {
+  margin-top: 6px;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* Accent per marketplace */
+.market-card.ml { --accent: #facc15; }       /* Mercado Livre amarelo */
+.market-card.shopee { --accent: #f97316; }   /* Shopee laranja */
+.market-card.magalu { --accent: #2563eb; }   /* Magalu azul */
+
+/* Accent for detail columns as well */
+.detail-col.ml { --accent: #facc15; }
+.detail-col.shopee { --accent: #f97316; }
+.detail-col.magalu { --accent: #2563eb; }
+
+/* Copy/primary button adopts local accent per marketplace */
+.market-card.ml button.primary {
+  background: #facc151a;   /* 10% */
+  border-color: #facc1566; /* ~40% */
+  color: #facc15;
+}
+.market-card.shopee button.primary {
+  background: #f973161a;
+  border-color: #f9731666;
+  color: #f97316;
+}
+.market-card.magalu button.primary {
+  background: #2563eb1a;
+  border-color: #2563eb66;
+  color: #2563eb;
+}
+
+.market-card button.primary:hover {
+  filter: brightness(1.05);
+}
+.market-card button.primary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Ensure result-main inside cards uses scoped accent */
+.market-card .result-main { color: var(--accent); }
+.market-card .market-result { color: var(--accent); }
+
+/* Override warn color inside each marketplace scope to use the accent */
+.market-card.ml .warn, .detail-col.ml .warn { color: var(--accent); }
+.market-card.shopee .warn, .detail-col.shopee .warn { color: var(--accent); }
+.market-card.magalu .warn, .detail-col.magalu .warn { color: var(--accent); }
+
+/* Remove old simple result style in favor of unified .result already existing */
+
+@media (max-width: 700px) {
+  .market-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 /* Flex & alignment helpers */
-.items-end { align-items: flex-end !important; }
-.justify-end { justify-content: flex-end !important; }
-.text-right { text-align: right !important; }
-.min-w-220 { min-width: 220px !important; }
-.fw-700 { font-weight: 700 !important; }
-.hidden { display: none !important; }
+.items-end {
+  align-items: flex-end !important;
+}
+
+.justify-end {
+  justify-content: flex-end !important;
+}
+
+.text-right {
+  text-align: right !important;
+}
+
+.min-w-220 {
+  min-width: 220px !important;
+}
+
+.fw-700 {
+  font-weight: 700 !important;
+}
+
+.hidden {
+  display: none !important;
+}
