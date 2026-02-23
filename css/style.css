@@ -6,7 +6,7 @@
   --accent: #22c55e;
   --warn: #f59e0b;
   --danger: #ef4444;
-  --border: #1f2937;
+  --border: #444b55;
 }
 
 * {
@@ -51,10 +51,48 @@ h1 {
   backdrop-filter: blur(6px);
 }
 
+.sku-search {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.sku-search input {
+  margin-right: 0;
+}
+
+.sku-search button {
+  margin-left: 0;
+}
+
+.ku-box {
+  /* left intentionally empty - legacy */
+}
+.sku-box { }
+.sku-box-sku { width: 160px; }
+.sku-box-name { flex: 1 1 auto; }
+
+/* Typeahead suggestions */
+.sku-suggestions {
+  background: #0b1220;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+  overflow: auto;
+  max-height: 260px;
+  font-size: 0.95rem;
+}
+.sku-suggestions div { border-bottom: 1px solid rgba(255,255,255,0.02); }
+.sku-suggestions div:hover { background: rgba(255,255,255,0.02); }
+.sku-suggestions strong { color: var(--accent); margin-right: 8px; }
+.sku-suggestions .muted { color: var(--muted); font-weight: 400; }
+
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+  margin-top: 10px;
 }
 
 .grid-3 {
@@ -72,7 +110,7 @@ h1 {
 
 .forms {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
 }
 
 label {
@@ -88,6 +126,65 @@ label {
 
 input[type="number"],
 input[type="text"] {
+  width: 100%;
+  background: #0b1220;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  outline: none;
+}
+/* Campos somente leitura (auto) */
+input[readonly] {
+  cursor: not-allowed;
+  background: linear-gradient(90deg, #ffffff03, #ffffff01);
+  border-style: dashed;
+  border-color: #ffffff0f;
+  color: #9ca3af;
+  opacity: 1;
+  padding-right: 40px; /* espaço para ícone */
+  position: relative;
+}
+input.auto-field[readonly] {
+  position: relative;
+}
+/* Badge "auto" (mantido para campos calculados) */
+input.auto-field[readonly]::after {
+  content: 'auto';
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  font-size: 0.65rem;
+  letter-spacing: .5px;
+  background: var(--accent);
+  color: #000;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+/* Ícone de cadeado à esquerda do badge (aplica-se a qualquer input readonly) */
+input[readonly]::before {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cbd5e1'><path d='M12 17a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm6-6h-1V9a5 5 0 00-10 0v2H6a2 2 0 00-2 2v6a2 2 0 002 2h12a2 2 0 002-2v-6a2 2 0 00-2-2zM8 9a4 4 0 018 0v2H8V9z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* Se já existir a badge 'auto', desloca-la um pouco para não sobrepor o ícone */
+input.auto-field[readonly]::after { right: 36px; }
+
+select {
   width: 100%;
   background: #0b1220;
   color: var(--text);
@@ -233,6 +330,11 @@ button:hover {
 }
 .detail-col h2 { font-size: 1.05rem; margin: 0 0 8px; }
 
+.variant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 700px) { .variant-grid { grid-template-columns: 1fr; } }
+.variant-card { border: 1px dashed #334155; border-radius: 10px; padding: 12px; background: rgba(2,6,23,0.35); }
+.variant-card h4 { margin: 0 0 12px; font-size: 0.95rem; letter-spacing: .5px; }
+
 .market-card {
   background: rgba(2, 6, 23, 0.45);
   border: 1px solid var(--border);
@@ -327,3 +429,42 @@ button:hover {
 .hidden {
   display: none !important;
 }
+
+/* Modal styles */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+}
+.modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(2,6,23,0.6);
+  backdrop-filter: blur(2px);
+}
+.modal-content {
+  position: relative;
+  background: rgba(17,24,39,0.95);
+  border: 1px solid var(--border);
+  padding: 16px;
+  border-radius: 12px;
+  max-width: 680px;
+  width: 94%;
+  z-index: 2;
+}
+.modal-close {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+.modal table { width: 100%; margin-top: 8px; border-collapse: collapse; }
+.modal th, .modal td { padding: 8px 6px; border-bottom: 1px solid var(--border); text-align: left }
+.modal .muted { color: var(--muted); }
