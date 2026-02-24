@@ -126,8 +126,8 @@ app.get('/search', async (req, res) => {
 
     let produtos = await tryPesquisa(q);
 
-    // Sempre tente também pegar SKUs compostos quando o termo for um prefixo simples (ex: '12570')
-    // Isso garante que itens como '12570-KIT2' também apareçam ao pesquisar '12570'.
+    // Tenta também buscar por SKUs compostos quando o termo for um prefixo simples (ex: '12570')
+    // Isso ajuda a trazer variações como '12570-KIT2' quando o usuário digita '12570'.
     try {
       if (q && !q.includes('-')) {
         const extra = await tryPesquisa(`${q}-`);
@@ -152,7 +152,6 @@ app.get('/search', async (req, res) => {
       return true;
     });
 
-    // Score de relevância: equality > startsWith > contains. Optionally restrict by field
     const qLower = q.toLowerCase();
     const field = (req.query.field || '').toLowerCase();
     function scoreItem(it) {

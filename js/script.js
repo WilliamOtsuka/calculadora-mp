@@ -69,8 +69,8 @@ function sanitizeNumberString(str, maxDecimals = 2) {
 }
 
 const marketplaces = ['ml', 'shopee', 'magalu'];
-const fields = ['custo', 'taxa_fixa', 'margem_lucro', 'comissao', 'subsidio', 'das', 'descontos', 'outras'];
-const pctFields = ['margem_lucro', 'comissao', 'subsidio', 'das', 'descontos', 'outras'];
+const fields = ['custo', 'embalagem', 'taxa_fixa', 'margem_lucro', 'comissao', 'subsidio', 'das', 'descontos', 'outras', 'spike_day'];
+const pctFields = ['margem_lucro', 'comissao', 'subsidio', 'das', 'descontos', 'outras', 'spike_day'];
 // Campos específicos da ML (sem tipo_anuncio, pois calculamos ambos os tipos)
 const mlExtraFields = ['categoria', 'custos_adic', 'impostos'];
 
@@ -116,7 +116,8 @@ function recalc(prefix) {
     pSub = 0,
     pDas = 0,
     pDesc = 0,
-    pOutras = 0
+    pOutras = 0,
+    pSpike = 0
   ) {
 
     const obterFaixa = obterFaixaFromBrackets;
@@ -132,7 +133,8 @@ function recalc(prefix) {
         pSub +
         pDas +
         pDesc +
-        pOutras;
+        pOutras +
+        pSpike;
 
       const denominador = 1 - totalPct;
 
@@ -241,7 +243,8 @@ function recalc(prefix) {
     const pOutras = getPct('outras');
 
     // passar DAS/descontos/outras para convergir a faixa correta
-    const res = calcular_preco_shopee(custo, ml, 0, pDas, pDesc, pOutras);
+    const pSpike = getPct('spike_day');
+    const res = calcular_preco_shopee(custo, ml, 0, pDas, pDesc, pOutras, pSpike);
     let pv = res.pv || 0;
     let comissao_base = res.comissao_base || 0;
     let taxa_fixa_calc = res.taxa_fixa || 0;
@@ -251,7 +254,7 @@ function recalc(prefix) {
       for (const b of SHOPEE_BRACKETS) {
         const com = b.com;
         const tf = b.tf;
-        const totalPct = com + pDas + pDesc + pOutras + ml;
+        const totalPct = com + pDas + pDesc + pOutras + pSpike + ml;
         const denomTry = 1 - totalPct;
         if (denomTry <= 0) continue;
         const pvTry = (custo + tf) / denomTry;
@@ -275,12 +278,13 @@ function recalc(prefix) {
     const vCom = pv * comissao_base;
     const vDas = pv * pDas;
     const vDesc = pv * pDesc;
-    const vTotTaxas = vCom + vDas + vDesc + taxa_fixa_calc;
+    const vSpike = pv * pSpike;
+    const vTotTaxas = vCom + vDas + vDesc + vSpike + taxa_fixa_calc;
     const lucro = pv - custo - vTotTaxas;
     const margemEfetiva = pv > 0 ? (lucro / pv) : 0;
 
     const totalEl = byId(`total_taxas_shopee`);
-    if (totalEl) totalEl.value = ((comissao_base + pDas + pDesc) * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (totalEl) totalEl.value = ((comissao_base + pDas + pDesc + pSpike) * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     setText(`det_comissao_shopee`, fmtBRL.format(vCom));
     setText(`det_das_shopee`, fmtBRL.format(vDas));
@@ -364,7 +368,7 @@ function recalc(prefix) {
 
 function attach() {
   // Vincula campos compartilhados (copiam seus valores para cada formulário e recalculam)
-  const sharedFields = ['custo', 'margem_lucro', 'das', 'descontos'];
+  const sharedFields = ['custo', 'embalagem', 'margem_lucro', 'das', 'descontos'];
   for (const f of sharedFields) {
     const sharedEl = byId(`shared_${f}`);
     if (!sharedEl) continue;
@@ -455,6 +459,7 @@ function attach() {
       if (skuInput && data.sku) skuInput.value = String(data.sku);
       // Preenche campo compartilhado e propaga para forms
       const sharedC = byId('shared_custo');
+      
       if (sharedC) {
         sharedC.value = fmtBRL.format(precoRaw);
         // copia para cada marketplace
@@ -659,8 +664,6 @@ function attach() {
       });
     }
 
-    // shoee-specific checkboxes removed; no listeners needed
-
     const resetBtn = byId(`resetBtn_${prefix}`);
     if (resetBtn) resetBtn.addEventListener('click', () => {
       for (const f of fields.concat(prefix === 'ml' ? mlExtraFields : [])) { const el = byId(`${f}_${prefix}`); if (el) el.value = ''; }
@@ -676,7 +679,6 @@ function attach() {
         const pvEl = byId(`pv_${prefix}`); if (pvEl) pvEl.textContent = 'R$ 0,00';
         const ttEl = byId(`total_taxas_${prefix}`); if (ttEl) ttEl.value = '';
         const etap = byId(`etapas_${prefix}`); if (etap) etap.textContent = '';
-        // shoee-specific checkboxes removed
       }
       const msg = byId(`msg_${prefix}`); if (msg) { msg.textContent = ''; msg.classList.add('hidden'); }
       recalc(prefix);

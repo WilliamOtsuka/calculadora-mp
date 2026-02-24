@@ -116,7 +116,7 @@ h1 {
 label {
   display: block;
   font-weight: 600;
-  margin-bottom: 6px;
+  margin: 6px 0 4px 0;
 }
 
 .muted {
@@ -468,3 +468,25 @@ button:hover {
 .modal table { width: 100%; margin-top: 8px; border-collapse: collapse; }
 .modal th, .modal td { padding: 8px 6px; border-bottom: 1px solid var(--border); text-align: left }
 .modal .muted { color: var(--muted); }
+
+/* Converted from inline styles in index.html */
+.sku-action {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.sku-msg {
+  font-size: 0.9rem;
+}
+.liquido-large {
+  font-size: 1.2rem;
+}
+.pv-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.small-btn {
+  padding: 6px 8px;
+  font-size: 0.85rem;
+}
