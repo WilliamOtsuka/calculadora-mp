@@ -107,16 +107,16 @@ function recalc(prefix) {
 
   const custo = getMoney('custo');
   const taxaFixa = getMoney('taxa_fixa');
+  const embalagem = getMoney('embalagem');
   const ml = getPct('margem_lucro');
 
   // Função auxiliar para calcular preço Shopee conforme tabela fornecida
   function calcular_preco_shopee(
     custo,
+    embalagem,
     margem_desejada,
-    pSub = 0,
     pDas = 0,
     pDesc = 0,
-    pOutras = 0,
     pSpike = 0
   ) {
 
@@ -130,13 +130,12 @@ function recalc(prefix) {
       const totalPct =
         faixaAtual.comissao_base +
         margem_desejada +
-        pSub +
         pDas +
         pDesc +
-        pOutras +
         pSpike;
-
+      console.log(`comissão_base: ${faixaAtual.comissao_base}, margem_desejada: ${margem_desejada}, pDas: ${pDas}, pDesc: ${pDesc}, pSpike: ${pSpike}, totalPct: ${totalPct}`);
       const denominador = 1 - totalPct;
+      // console.log(denominador);
 
       if (denominador <= 0) {
         return {
@@ -146,8 +145,7 @@ function recalc(prefix) {
           comissao_base: 0
         };
       }
-
-      const novoPv = (custo + faixaAtual.taxa_fixa) / denominador;
+      const novoPv = (custo + embalagem + faixaAtual.taxa_fixa) / denominador;
 
       const novaFaixa = obterFaixa(novoPv);
 
@@ -233,18 +231,32 @@ function recalc(prefix) {
     return; // fim fluxo ML
   }
 
-  // Shopee específico: usa tabela de faixas e inclui DAS/Descontos/Outras na soma percentual
+  // Shopee específico: usa tabela de faixas e inclui DAS/Descontos na soma percentual
   if (prefix === 'shopee') {
     const msg = byId(`msg_${prefix}`);
     if (msg) { msg.classList.add('hidden'); msg.textContent = ''; }
 
     const pDas = getPct('das');
     const pDesc = getPct('descontos');
-    const pOutras = getPct('outras');
-
-    // passar DAS/descontos/outras para convergir a faixa correta
     const pSpike = getPct('spike_day');
-    const res = calcular_preco_shopee(custo, ml, 0, pDas, pDesc, pOutras, pSpike);
+    
+    // Debug: mostrar cálculo no console
+    // console.log('=== Shopee Calculation ===');
+    // console.log('custo:', custo);
+    // console.log('embalagem:', embalagem);
+    // console.log('margem_lucro (ml):', ml, '(' + (ml*100).toFixed(2) + '%)');
+    // console.log('pDas:', pDas, '(' + (pDas*100).toFixed(2) + '%)');
+    // console.log('pDesc:', pDesc, '(' + (pDesc*100).toFixed(2) + '%)');
+    // console.log('pSpike:', pSpike, '(' + (pSpike*100).toFixed(2) + '%)');
+    
+    const res = calcular_preco_shopee(custo, embalagem, ml, pDas, pDesc, pSpike);
+    
+    // console.log('--- Result ---');
+    // console.log('PV:', res.pv);
+    // console.log('comissao_base:', res.comissao_base, '(' + (res.comissao_base*100).toFixed(2) + '%)');
+    // console.log('taxa_fixa:', res.taxa_fixa);
+    // console.log('=======================');
+
     let pv = res.pv || 0;
     let comissao_base = res.comissao_base || 0;
     let taxa_fixa_calc = res.taxa_fixa || 0;
@@ -254,7 +266,7 @@ function recalc(prefix) {
       for (const b of SHOPEE_BRACKETS) {
         const com = b.com;
         const tf = b.tf;
-        const totalPct = com + pDas + pDesc + pOutras + pSpike + ml;
+        const totalPct = com + pDas + pDesc + pSpike + ml;
         const denomTry = 1 - totalPct;
         if (denomTry <= 0) continue;
         const pvTry = (custo + tf) / denomTry;
@@ -279,12 +291,13 @@ function recalc(prefix) {
     const vDas = pv * pDas;
     const vDesc = pv * pDesc;
     const vSpike = pv * pSpike;
-    const vTotTaxas = vCom + vDas + vDesc + vSpike + taxa_fixa_calc;
+    const vMargemLucro = pv * ml;
+    const vTotTaxas = vCom + vMargemLucro + vDas + vDesc + vSpike + taxa_fixa_calc;
     const lucro = pv - custo - vTotTaxas;
     const margemEfetiva = pv > 0 ? (lucro / pv) : 0;
 
     const totalEl = byId(`total_taxas_shopee`);
-    if (totalEl) totalEl.value = ((comissao_base + pDas + pDesc + pSpike) * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (totalEl) totalEl.value = ((comissao_base + pDas + pDesc + pSpike + ml)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     setText(`det_comissao_shopee`, fmtBRL.format(vCom));
     setText(`det_das_shopee`, fmtBRL.format(vDas));
@@ -368,7 +381,7 @@ function recalc(prefix) {
 
 function attach() {
   // Vincula campos compartilhados (copiam seus valores para cada formulário e recalculam)
-  const sharedFields = ['custo', 'embalagem', 'margem_lucro', 'das', 'descontos'];
+  const sharedFields = ['custo', 'embalagem', 'margem_lucro', 'das', 'descontos', 'spike_day'];
   for (const f of sharedFields) {
     const sharedEl = byId(`shared_${f}`);
     if (!sharedEl) continue;
@@ -698,7 +711,9 @@ function attach() {
       } else {
         const pv = (byId(`pv_${prefix}`) || {}).textContent || '';
         const tt = (byId(`total_taxas_${prefix}`) || {}).value || '';
-        texto = `PV sugerido: ${pv}\nTotal de taxas: ${tt}%`;
+        // texto = `PV sugerido: ${pv}\nTotal de taxas: ${tt}%`;
+        // texto = descricao do produto, codigo (sku) preco e preco promocional
+        texto = `${byId('tiny_nome') ? byId('tiny_nome').value : 'Produto'};SKU: ${byId('tiny_sku') ? byId('tiny_sku').value : '—'};PV sugerido: ${pv};Total de taxas: ${tt}%`;
       }
       try { await navigator.clipboard.writeText(texto); } catch { }
     });
