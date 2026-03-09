@@ -4,9 +4,9 @@ const fmtPct = new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractio
 
 // Shopee bracket table (fonte única da verdade para faixas)
 const SHOPEE_BRACKETS = [
-  { min: 0, max: 80, com: 0.20, tf: 4 },            // até 79,99 -> 20% + R$4
-  { min: 80, max: 100, com: 0.14, tf: 16 },         // 80..99,99 -> 14% + R$16
-  { min: 100, max: 200, com: 0.14, tf: 20 },        // 100..199,99 -> 14% + R$20
+  { min: 0, max: 79.999999, com: 0.20, tf: 4 },            // até 79,99 -> 20% + R$4
+  { min: 80, max: 99.999999, com: 0.14, tf: 16 },         // 80..99,99 -> 14% + R$16
+  { min: 100, max: 199.999999, com: 0.14, tf: 20 },        // 100..199,99 -> 14% + R$20
   { min: 200, max: Infinity, com: 0.14, tf: 26 }    // 200+ -> 14% + R$26
 ];
 
@@ -240,43 +240,41 @@ function recalc(prefix) {
     const pDesc = getPct('descontos');
     const pSpike = getPct('spike_day');
     
-    // Debug: mostrar cálculo no console
-    // console.log('=== Shopee Calculation ===');
-    // console.log('custo:', custo);
-    // console.log('embalagem:', embalagem);
-    // console.log('margem_lucro (ml):', ml, '(' + (ml*100).toFixed(2) + '%)');
-    // console.log('pDas:', pDas, '(' + (pDas*100).toFixed(2) + '%)');
-    // console.log('pDesc:', pDesc, '(' + (pDesc*100).toFixed(2) + '%)');
-    // console.log('pSpike:', pSpike, '(' + (pSpike*100).toFixed(2) + '%)');
+    // Calcula PV para cada faixa e encontra a faixa correta onde o PV calculado está dentro dos limites
+    let pv = 0;
+    let comissao_base = 0;
+    let taxa_fixa_calc = 0;
     
-    const res = calcular_preco_shopee(custo, embalagem, ml, pDas, pDesc, pSpike);
+    for (const b of SHOPEE_BRACKETS) {
+      const com = b.com;
+      const tf = b.tf;
+      const totalPct = com + pDas + pDesc + pSpike + ml;
+      const denom = 1 - totalPct;
+      if (denom <= 0) continue;
+      
+      const pvCalculado = (custo + embalagem + tf) / denom;
+      
+      // Verifica se o PV calculado está dentro dos limites desta faixa
+      const pvMin = (b.min === undefined) ? 0 : b.min;
+      const pvMax = (b.max === undefined) ? Infinity : b.max;
+      
+      if (pvCalculado >= pvMin && pvCalculado < pvMax) {
+        pv = pvCalculado;
+        comissao_base = com;
+        taxa_fixa_calc = tf;
+        break;
+      }
+    }
     
-    // console.log('--- Result ---');
-    // console.log('PV:', res.pv);
-    // console.log('comissao_base:', res.comissao_base, '(' + (res.comissao_base*100).toFixed(2) + '%)');
-    // console.log('taxa_fixa:', res.taxa_fixa);
-    // console.log('=======================');
-
-    let pv = res.pv || 0;
-    let comissao_base = res.comissao_base || 0;
-    let taxa_fixa_calc = res.taxa_fixa || 0;
-
-    // Se não convergiu, testar manualmente cada faixa e escolher a que produz PV válido
-    if (!pv || pv <= 0) {
-      for (const b of SHOPEE_BRACKETS) {
-        const com = b.com;
-        const tf = b.tf;
-        const totalPct = com + pDas + pDesc + pSpike + ml;
-        const denomTry = 1 - totalPct;
-        if (denomTry <= 0) continue;
-        const pvTry = (custo + tf) / denomTry;
-        const inRange = (b.min === undefined || pvTry >= b.min) && (b.max === undefined || pvTry < b.max);
-        if (inRange) {
-          pv = pvTry;
-          comissao_base = com;
-          taxa_fixa_calc = tf;
-          break;
-        }
+    // Se não encontrou nenhuma faixa válida, usa a última faixa (200+)
+    if (pv === 0 || pv < 0) {
+      const lastBracket = SHOPEE_BRACKETS[SHOPEE_BRACKETS.length - 1];
+      const totalPct = lastBracket.com + pDas + pDesc + pSpike + ml;
+      const denom = 1 - totalPct;
+      if (denom > 0) {
+        pv = (custo + embalagem + lastBracket.tf) / denom;
+        comissao_base = lastBracket.com;
+        taxa_fixa_calc = lastBracket.tf;
       }
     }
 
@@ -297,7 +295,7 @@ function recalc(prefix) {
     const margemEfetiva = pv > 0 ? (lucro / pv) : 0;
 
     const totalEl = byId(`total_taxas_shopee`);
-    if (totalEl) totalEl.value = ((comissao_base + pDas + pDesc + pSpike + ml)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (totalEl) totalEl.value = ((comissao_base + pDas + pDesc + pSpike + ml)).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
 
     setText(`det_comissao_shopee`, fmtBRL.format(vCom));
     setText(`det_das_shopee`, fmtBRL.format(vDas));
@@ -456,12 +454,14 @@ function attach() {
       if (!res.ok) {
         if (res.status === 404) {
           if (skuMsg) skuMsg.textContent = 'SKU não encontrado.';
-        } else {
-          if (skuMsg) {
-            skuMsg.textContent = 'Erro na consulta.';
-            console.error('Erro na consulta SKU:', res.status, await res.text());
-          }
-        }
+      } else {
+        const pv = (byId(`pv_${prefix}`) || {}).textContent || '';
+        const tt = (byId(`total_taxas_${prefix}`) || {}).value || '';
+        // Remove "R$" do valor para copiar (ex: "R$ 41,60" -> "41,60")
+        const pvSemRS = pv.replace(/R\$\s?/g, '').trim();
+        // texto = descricao do produto, codigo (sku) preco e preco promocional
+        texto = `${byId('tiny_nome') ? byId('tiny_nome').value : 'Produto'};${byId('tiny_sku') ? byId('tiny_sku').value : '—'};${pvSemRS}`;
+      }
         return;
       }
       const data = await res.json();
@@ -711,9 +711,11 @@ function attach() {
       } else {
         const pv = (byId(`pv_${prefix}`) || {}).textContent || '';
         const tt = (byId(`total_taxas_${prefix}`) || {}).value || '';
+        // Remove "R$" do valor para copiar (ex: "R$ 41,60" -> "41,60")
+        const pvSemRS = pv.replace(/R\$\s?/g, '').trim();
         // texto = `PV sugerido: ${pv}\nTotal de taxas: ${tt}%`;
         // texto = descricao do produto, codigo (sku) preco e preco promocional
-        texto = `${byId('tiny_nome') ? byId('tiny_nome').value : 'Produto'};SKU: ${byId('tiny_sku') ? byId('tiny_sku').value : '—'};PV sugerido: ${pv};Total de taxas: ${tt}%`;
+        texto = `${byId('tiny_nome') ? byId('tiny_nome').value : 'Produto'};${byId('tiny_sku') ? byId('tiny_sku').value : '—'};${pvSemRS}`;
       }
       try { await navigator.clipboard.writeText(texto); } catch { }
     });
