@@ -5,6 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Calculadora – PV sugerido</title>
+    <link rel="icon" type="image/x-icon" href="/img/favicon/favicon.ico">
     <link rel="stylesheet" href="css/style.css" />
 </head>
 
@@ -40,8 +41,8 @@
                         </div>
                         <div>
                             <label>Custo da embalagem <span class="muted">(R$)</span></label>
-                            <div class="row"><input id="shared_embalagem" value="R$ 2,00" type="text" inputmode="decimal"
-                                    placeholder="0,00" />
+                            <div class="row"><input id="shared_embalagem" value="R$ 2,00" type="text"
+                                    inputmode="decimal" placeholder="0,00" />
                             </div>
                         </div>
 
@@ -68,15 +69,15 @@
                     <div class="market-flex">
                         <div class="market-card ml">
                             <!-- -----------------------MERCADO LIVRE----------------------- -->
-                            <h1>Mercado Livre</h1>
+                            <h1 id="ml">Mercado Livre</h1>
                             <div class="grid mt-8">
                                 <div>
-                                    <label>Custo do produto <span class="muted">(R$)</span></label>
+                                    <label>Custo do produto <span class="muted"> (auto R$)</span></label>
                                     <div class="row"><input id="custo_ml" type="text" readonly inputmode="decimal"
                                             placeholder="0,00" /></div>
                                 </div>
                                 <div>
-                                    <label>Margem de lucro desejada <span class="muted">(%)</span></label>
+                                    <label>Margem de lucro desejada <span class="muted"> (auto %)</span></label>
                                     <div class="row"><input id="margem_lucro_ml" type="text" readonly
                                             inputmode="decimal" placeholder="0" /><span class="sufix">%</span></div>
                                 </div>
@@ -94,7 +95,7 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <label>Custo de embalagem <span class="muted">(R$)</span></label>
+                                    <label>Custo de embalagem <span class="muted"> (auto R$)</span></label>
                                     <div class="row"><input id="embalagem_ml" type="text" readonly inputmode="decimal"
                                             placeholder="0,00" /></div>
                                 </div>
@@ -116,13 +117,13 @@
                                     <h4 class="mt-0">Clássico</h4>
                                     <div class="grid">
                                         <div>
-                                            <label>Comissão (auto) <span class="muted">(%)</span></label>
+                                            <label>Comissão<span class="muted"> (auto %)</span></label>
                                             <div class="row"><input id="comissao_pct_ml_classico" class="auto-field"
                                                     type="text" readonly title="Campo calculado automaticamente" /><span
                                                     class="sufix">%</span></div>
                                         </div>
                                         <div>
-                                            <label>Tarifa fixa (auto) <span class="muted">(R$)</span></label>
+                                            <label>Tarifa fixa<span class="muted"> (auto R$)</span></label>
                                             <div class="row"><input id="tarifa_fixa_ml_classico" class="auto-field"
                                                     type="text" readonly title="Campo calculado automaticamente" />
                                             </div>
@@ -130,7 +131,7 @@
                                     </div>
                                     <div class="grid mt-8">
                                         <div>
-                                            <label>Total de taxas (auto) <span class="muted">(%)</span></label>
+                                            <label>Total de taxas<span class="muted"> (auto %)</span></label>
                                             <div class="row"><input id="total_taxas_ml_classico" class="auto-field"
                                                     type="text" readonly title="Campo calculado automaticamente" />
                                             </div>
@@ -152,13 +153,13 @@
                                     <h4 class="mt-0">Premium</h4>
                                     <div class="grid">
                                         <div>
-                                            <label>Comissão (auto) <span class="muted">(%)</span></label>
+                                            <label>Comissão<span class="muted"> (auto %)</span></label>
                                             <div class="row"><input id="comissao_pct_ml_premium" class="auto-field"
                                                     type="text" readonly title="Campo calculado automaticamente" /><span
                                                     class="sufix">%</span></div>
                                         </div>
                                         <div>
-                                            <label>Tarifa fixa (auto) <span class="muted">(R$)</span></label>
+                                            <label>Tarifa fixa<span class="muted"> (auto R$)</span></label>
                                             <div class="row"><input id="tarifa_fixa_ml_premium" class="auto-field"
                                                     type="text" readonly title="Campo calculado automaticamente" />
                                             </div>
@@ -166,7 +167,7 @@
                                     </div>
                                     <div class="grid mt-8">
                                         <div>
-                                            <label>Total de taxas (auto) <span class="muted">(%)</span></label>
+                                            <label>Total de taxas<span class="muted"> (auto %)</span></label>
                                             <div class="row"><input id="total_taxas_ml_premium" class="auto-field"
                                                     type="text" readonly title="Campo calculado automaticamente" />
                                             </div>
@@ -197,16 +198,16 @@
                         </div>
                         <!-- -----------------------SHOPEE----------------------- -->
                         <div class="market-card shopee">
-                            <h1>Shopee</h1>
+                            <h1 id="shopee">Shopee</h1>
                             <div class="grid">
                                 <div>
-                                    <label>Custo do produto <span class="muted">(R$)</span></label>
+                                    <label>Custo do produto <span class="muted"> (auto R$)</span></label>
                                     <div class="row"><input id="custo_shopee" type="text" readonly inputmode="decimal"
                                             placeholder="0,00" />
                                     </div>
                                 </div>
                                 <div>
-                                    <label>Custo de embalagem <span class="muted">(R$)</span></label>
+                                    <label>Custo de embalagem <span class="muted"> (auto R$)</span></label>
                                     <div class="row"><input id="embalagem_shopee" type="text" readonly
                                             inputmode="decimal" placeholder="0,00" /></div>
                                 </div>
@@ -214,13 +215,13 @@
 
                             <div class="grid">
                                 <div>
-                                    <label>Taxa fixa <span class="muted">(R$)</span></label>
+                                    <label>Taxa fixa <span class="muted"> (auto R$)</span></label>
                                     <div class="row"><input id="taxa_fixa_shopee" type="text" readonly
                                             inputmode="decimal" placeholder="0,00" />
                                     </div>
                                 </div>
                                 <div>
-                                    <label>Margem de lucro <span class="muted">(%)</span></label>
+                                    <label>Margem de lucro <span class="muted"> (auto %)</span></label>
                                     <div class="row"><input id="margem_lucro_shopee" type="text" readonly
                                             inputmode="decimal" placeholder="0" /><span class="sufix">%</span></div>
                                 </div>
@@ -228,12 +229,12 @@
 
                             <div class="grid">
                                 <div>
-                                    <label>Comissão Shopee <span class="muted">(%)</span></label>
+                                    <label>Comissão Shopee <span class="muted"> (auto %)</span></label>
                                     <div class="row"><input id="comissao_shopee" class="auto-field" type="text" readonly
                                             title="Campo calculado automaticamente" /><span class="sufix">%</span></div>
                                 </div>
                                 <div>
-                                    <label>DAS Simples <span class="muted">(%)</span></label>
+                                    <label>DAS Simples <span class="muted"> (auto %)</span></label>
                                     <div class="row"><input id="das_shopee" type="text" readonly inputmode="decimal"
                                             placeholder="0" /><span class="sufix">%</span></div>
                                 </div>
@@ -241,34 +242,35 @@
 
                             <div class="grid-3 mt-8">
                                 <div>
-                                    <label>Margem p/ descontos <span class="muted">(%)</span></label>
+                                    <label>Margem p/ descontos <span class="muted"> (auto %)</span></label>
                                     <div class="row"><input id="descontos_shopee" type="text" readonly
                                             inputmode="decimal" placeholder="0" /><span class="sufix">%</span></div>
                                 </div>
                                 <div>
-                                    <label>Spike Day <span class="muted">(%)</span></label>
+                                    <label>Spike Day <span class="muted"> (auto %)</span></label>
                                     <div class="row"><input id="spike_day_shopee" value="2" type="text"
                                             inputmode="decimal" placeholder="0" /><span class="sufix">%</span></div>
                                 </div>
                             </div>
                             <div class="grid">
                                 <div>
-                                    <label>Total de taxas (auto) <span class="muted">(%)</span></label>
+                                    <label>Total de taxas + margem<span class="muted"> (auto)</span></label>
                                     <div class="row"><input id="total_taxas_shopee" class="auto-field" type="text"
                                             readonly title="Campo calculado automaticamente" /></div>
                                 </div>
                                 <div class="btns items-end justify-end">
                                     <button id="simular_shopee_btn" class="primary small-btn" type="button">Simular
                                         faixas</button>
-                                    </div>
                                 </div>
+                            </div>
 
                             <div class="result mt-12">
                                 <div>
                                     <div class="result-secondary">PV sugerido</div>
                                     <div class="pv-row">
                                         <div id="pv_shopee" class="result-main">R$ 0,00</div>
-                                        <button id="copyBtn_shopee" class="primary" type="button">Copiar resultado</button>
+                                        <button id="copyBtn_shopee" class="primary" type="button">Copiar
+                                            resultado</button>
                                     </div>
                                 </div>
                             </div>
@@ -276,36 +278,41 @@
                         </div>
                         <div class="market-card magalu">
                             <!-- -----------------------MAGALU----------------------- -->
-                            <h1>Magalu</h1>
+                            <h1 id="magalu">Magalu</h1>
                             <div class="grid">
                                 <div>
-                                    <label>Custo do produto <span class="muted">(R$)</span></label>
+                                    <label>Custo do produto <span class="muted"> (auto R$)</span></label>
                                     <div class="row"><input id="custo_magalu" type="text" readonly inputmode="decimal"
                                             placeholder="0,00" />
                                     </div>
                                 </div>
                                 <div>
-                                    <label>Custo de embalagem <span class="muted">(R$)</span></label>
+                                    <label>Custo de embalagem <span class="muted"> (auto R$)</span></label>
                                     <div class="row"><input id="embalagem_magalu" type="text" readonly
                                             inputmode="decimal" placeholder="0,00" /></div>
                                 </div>
                                 <div>
                                     <label>Categoria</label>
                                     <div class="row"><select id="categoria_magalu">
-                                        <option value="">Selecione uma categoria</option>
-                                        <option value="Alimentos">Alimentos e Bebidas</option>
-                                        <option value="Utilidades">Utilidades Domésticas</option>
-                                    </select></div>
+                                            <option value="">Selecione uma categoria</option>
+                                            <option value="Alimentos">Alimentos e Bebidas</option>
+                                            <option value="Utilidades">Utilidades Domésticas</option>
+                                        </select></div>
                                 </div>
                                 <div>
                                     <label>Taxa fixa <span class="muted">(R$)</span></label>
-                                    <div class="row"><input id="taxa_fixa_magalu" type="text" readonly inputmode="decimal"
-                                            placeholder="0,00" />
+                                    <div class="row"><input id="taxa_fixa_magalu" type="text" readonly
+                                            inputmode="decimal" placeholder="0,00" />
                                     </div>
                                 </div>
                                 <div>
-                                    <label>Margem de lucro <span class="muted">(%)</span></label>
+                                    <label>Margem de lucro <span class="muted"> (auto %)</span></label>
                                     <div class="row"><input id="margem_lucro_magalu" type="text" readonly
+                                            inputmode="decimal" placeholder="0" /><span class="sufix">%</span></div>
+                                </div>
+                                <div>
+                                    <label>Comissão <span class="muted"> (auto %)</span></label>
+                                    <div class="row"><input id="comissao_magalu" type="text" readonly
                                             inputmode="decimal" placeholder="0" /><span class="sufix">%</span></div>
                                 </div>
                             </div>
@@ -342,31 +349,26 @@
                                 <div>
                                     <label>SLA de envio</label>
                                     <div class="row"><select id="sla_envio_magalu">
-                                        <option value="0">&lt; 92%</option>
-                                        <option value="0.25" selected>92% a 97%</option>
-                                        <option value="0.5">&gt; 97%</option>
-                                    </select></div>
+                                            <option value="0">&lt; 92%</option>
+                                            <option value="0.25" selected>92% a 97%</option>
+                                            <option value="0.5">&gt; 97%</option>
+                                        </select></div>
                                 </div>
                                 <div>
-                                    <label>Comissão <span class="muted">(auto %)</span></label>
-                                    <div class="row"><input id="comissao_magalu" type="text" readonly inputmode="decimal"
-                                            placeholder="0" /><span class="sufix">%</span></div>
-                                </div>
-                                <div>
-                                    <label>Desconto frete <span class="muted">(auto %)</span></label>
-                                    <div class="row"><input id="subsidio_magalu" type="text" readonly inputmode="decimal"
-                                            placeholder="0" /><span class="sufix">%</span></div>
+                                    <label>Desconto frete <span class="muted"> (auto %)</span></label>
+                                    <div class="row"><input id="subsidio_magalu" type="text" readonly
+                                            inputmode="decimal" placeholder="0" /><span class="sufix">%</span></div>
                                 </div>
                             </div>
 
                             <div class="grid-3 mt-8">
                                 <div>
-                                    <label>DAS Simples <span class="muted">(%)</span></label>
+                                    <label>DAS Simples <span class="muted"> (auto %)</span></label>
                                     <div class="row"><input id="das_magalu" type="text" readonly inputmode="decimal"
                                             placeholder="0" /><span class="sufix">%</span></div>
                                 </div>
                                 <div>
-                                    <label>Margem p/ descontos <span class="muted">(%)</span></label>
+                                    <label>Margem p/ descontos <span class="muted"> (auto %)</span></label>
                                     <div class="row"><input id="descontos_magalu" type="text" readonly
                                             inputmode="decimal" placeholder="0" /><span class="sufix">%</span></div>
                                 </div>
@@ -379,7 +381,7 @@
 
                             <div class="grid mt-8">
                                 <div>
-                                    <label>Total de taxas (auto) <span class="muted">(%)</span></label>
+                                    <label>Total de taxas<span class="muted"> (auto)</span></label>
                                     <div class="row"><input id="total_taxas_magalu" class="auto-field" type="text"
                                             readonly title="Campo calculado automaticamente" /></div>
                                 </div>
@@ -403,46 +405,90 @@
             <div class="card">
                 <div class="market-flex">
                     <div class="detail-col ml">
-                        <h2 class="mt-0">Detalhamento ML</h2>
-                        <table>
-                            <tbody>
-                                <tr>
-                                    <th>Comissão (R$)</th>
-                                    <td id="det_comissao_ml">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>Tarifa fixa (R$)</th>
-                                    <td id="det_tarifa_fixa_ml">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>Impostos (R$)</th>
-                                    <td id="det_impostos_ml">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>Custos adicionais (R$)</th>
-                                    <td id="det_custos_adic_ml">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>Total taxas/deduções (R$)</th>
-                                    <td id="det_total_taxas_ml" class="fw-700">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>Valor líquido (R$)</th>
-                                    <td id="det_liquido_ml">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>Lucro líquido (R$)</th>
-                                    <td id="det_lucro_ml" class="warn">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>Margem efetiva</th>
-                                    <td id="det_margem_efetiva_ml" class="warn">0,00%</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <h2 class="mt-0" id="ml">Detalhamento ML</h2>
+                        <div class="ml-detail-split">
+                            <div class="ml-detail-side">
+                                <h3 class="ml-detail-title">Clássico</h3>
+                                <table>
+                                    <tbody>
+                                        <tr>
+                                            <th>Comissão (R$)</th>
+                                            <td id="det_comissao_ml_classico">R$ 0,00</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Tarifa fixa (R$)</th>
+                                            <td id="det_tarifa_fixa_ml_classico">R$ 0,00</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Impostos (R$)</th>
+                                            <td id="det_impostos_ml_classico">R$ 0,00</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Custos adicionais (R$)</th>
+                                            <td id="det_custos_adic_ml_classico">R$ 0,00</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Total taxas/deduções (R$)</th>
+                                            <td id="det_total_taxas_ml_classico" class="fw-700">R$ 0,00</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Valor líquido (R$)</th>
+                                            <td id="det_liquido_ml_classico">R$ 0,00</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Lucro líquido (R$)</th>
+                                            <td id="det_lucro_ml_classico" class="warn">R$ 0,00</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Margem efetiva</th>
+                                            <td id="det_margem_efetiva_ml_classico" class="warn">0,00%</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="ml-detail-side ml-detail-side-premium">
+                                <h3 class="ml-detail-title">Premium</h3>
+                                <table>
+                                    <tbody>
+                                        <tr>
+                                            <th>Comissão (R$)</th>
+                                            <td id="det_comissao_ml_premium">R$ 0,00</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Tarifa fixa (R$)</th>
+                                            <td id="det_tarifa_fixa_ml_premium">R$ 0,00</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Impostos (R$)</th>
+                                            <td id="det_impostos_ml_premium">R$ 0,00</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Custos adicionais (R$)</th>
+                                            <td id="det_custos_adic_ml_premium">R$ 0,00</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Total taxas/deduções (R$)</th>
+                                            <td id="det_total_taxas_ml_premium" class="fw-700">R$ 0,00</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Valor líquido (R$)</th>
+                                            <td id="det_liquido_ml_premium">R$ 0,00</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Lucro líquido (R$)</th>
+                                            <td id="det_lucro_ml_premium" class="warn">R$ 0,00</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Margem efetiva</th>
+                                            <td id="det_margem_efetiva_ml_premium" class="warn">0,00%</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                     <div class="detail-col shopee">
-                        <h2 class="mt-0">Detalhamento Shopee</h2>
+                        <h2 class="mt-0" id="shopee">Detalhamento Shopee</h2>
                         <table>
                             <tbody>
                                 <tr>
@@ -458,7 +504,15 @@
                                     <td id="det_descontos_shopee">R$ 0,00</td>
                                 </tr>
                                 <tr>
-                                    <th>Total de taxas (R$)</th>
+                                    <th>Spike Day (R$)</th>
+                                    <td id="det_spike_shopee">R$ 0,00</td>
+                                </tr>
+                                <tr>
+                                    <th>Margem desejada (R$)</th>
+                                    <td id="det_margem_lucro_shopee">R$ 0,00</td>
+                                </tr>
+                                <tr>
+                                    <th>Total de deduções + margem (R$)</th>
                                     <td id="det_total_taxas_shopee" class="fw-700">R$ 0,00</td>
                                 </tr>
                                 <tr>
@@ -477,7 +531,7 @@
                         </table>
                     </div>
                     <div class="detail-col magalu">
-                        <h2 class="mt-0">Detalhamento Magalu</h2>
+                        <h2 class="mt-0" id="magalu">Detalhamento Magalu</h2>
                         <table>
                             <tbody>
                                 <tr>

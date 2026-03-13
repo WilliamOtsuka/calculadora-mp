@@ -483,12 +483,12 @@ function recalcMagalu() {
   }
 
   const result = computeMagaluResult();
-  setValue('total_taxas_magalu', formatNumber(result.totalTaxasPct * 100, 2));
+  setValue('total_taxas_magalu', formatNumber(result.totalTaxasPct, 3));
 
   if (result.invalido) {
     setText('pv_magalu', '—');
     setText('det_comissao_magalu', fmtBRL.format(0));
-    setText('det_subsidio_magalu', fmtBRL.format(result.freteLoja || 0));
+    setText('det_subsidio_magalu', fmtBRL.format(0));
     setText('det_das_magalu', fmtBRL.format(0));
     setText('det_descontos_magalu', fmtBRL.format(0));
     setText('det_outras_magalu', fmtBRL.format(0));
@@ -558,6 +558,7 @@ function computeMlOffer({ custo, margemLucro, categoria, impostosPct, custosAdic
   const pv = etapa2 / denominador;
   const vCom = pv * comissao;
   const vImp = pv * impostosPct;
+  const totalDeducoes = vCom + vImp + tarifaFixa + custosAdic;
   const liquido = pv - vCom - vImp - tarifaFixa - custosAdic;
   const lucro = liquido - custo;
   const margem = pv > 0 ? lucro / pv : 0;
@@ -568,6 +569,7 @@ function computeMlOffer({ custo, margemLucro, categoria, impostosPct, custosAdic
     vImp,
     tarifaFixa,
     custosAdic,
+    totalDeducoes,
     liquido,
     lucro,
     margem,
@@ -592,6 +594,31 @@ function fillMlOffer(tipo, result) {
   setText(`liquido_ml_${tipo}`, fmtBRL.format(result.liquido));
 }
 
+function fillMlDetail(tipo, offer) {
+  const suffix = `ml_${tipo}`;
+
+  if (!offer) {
+    setText(`det_comissao_${suffix}`, fmtBRL.format(0));
+    setText(`det_tarifa_fixa_${suffix}`, fmtBRL.format(0));
+    setText(`det_impostos_${suffix}`, fmtBRL.format(0));
+    setText(`det_custos_adic_${suffix}`, fmtBRL.format(0));
+    setText(`det_total_taxas_${suffix}`, fmtBRL.format(0));
+    setText(`det_liquido_${suffix}`, fmtBRL.format(0));
+    setText(`det_lucro_${suffix}`, fmtBRL.format(0));
+    setText(`det_margem_efetiva_${suffix}`, '0,00%');
+    return;
+  }
+
+  setText(`det_comissao_${suffix}`, fmtBRL.format(offer.vCom || 0));
+  setText(`det_tarifa_fixa_${suffix}`, fmtBRL.format(offer.tarifaFixa || 0));
+  setText(`det_impostos_${suffix}`, fmtBRL.format(offer.vImp || 0));
+  setText(`det_custos_adic_${suffix}`, fmtBRL.format(offer.custosAdic || 0));
+  setText(`det_total_taxas_${suffix}`, fmtBRL.format(offer.totalDeducoes || 0));
+  setText(`det_liquido_${suffix}`, fmtBRL.format(offer.liquido || 0));
+  setText(`det_lucro_${suffix}`, fmtBRL.format(offer.lucro || 0));
+  setText(`det_margem_efetiva_${suffix}`, formatPercentDisplay(offer.margem || 0));
+}
+
 function recalcMercadoLivre() {
   const custo = getMoneyField('custo', 'ml');
   const margemLucro = getPercentField('margem_lucro', 'ml');
@@ -606,15 +633,8 @@ function recalcMercadoLivre() {
 
   fillMlOffer('classico', classico);
   fillMlOffer('premium', premium);
-
-  setText('det_comissao_ml', fmtBRL.format(classico.vCom || 0));
-  setText('det_tarifa_fixa_ml', fmtBRL.format(classico.tarifaFixa || 0));
-  setText('det_impostos_ml', fmtBRL.format(classico.vImp || 0));
-  setText('det_custos_adic_ml', fmtBRL.format(classico.custosAdic || 0));
-  setText('det_total_taxas_ml', fmtBRL.format((classico.pv || 0) * (classico.tt || 0)));
-  setText('det_liquido_ml', fmtBRL.format(classico.liquido || 0));
-  setText('det_lucro_ml', fmtBRL.format(classico.lucro || 0));
-  setText('det_margem_efetiva_ml', formatPercentDisplay(classico.margem || 0));
+  fillMlDetail('classico', classico);
+  fillMlDetail('premium', premium);
 }
 
 function computeShopeeResult() {
@@ -669,13 +689,17 @@ function computeShopeeResult() {
   return {
     pv,
     custo,
+    margemLucro,
     pDas,
     pDesc,
+    pSpike,
     comissaoBase,
     taxaFixa,
     vCom,
     vDas,
     vDesc,
+    vSpike,
+    vMargemLucro,
     totalTaxasValor,
     lucro,
     margemEfetiva,
@@ -698,6 +722,8 @@ function recalcShopee() {
   setText('det_comissao_shopee', fmtBRL.format(result.vCom));
   setText('det_das_shopee', fmtBRL.format(result.vDas));
   setText('det_descontos_shopee', fmtBRL.format(result.vDesc));
+  setText('det_spike_shopee', fmtBRL.format(result.vSpike));
+  setText('det_margem_lucro_shopee', fmtBRL.format(result.vMargemLucro));
   setText('det_total_taxas_shopee', fmtBRL.format(result.totalTaxasValor));
   setText('det_taxa_fixa_shopee', fmtBRL.format(result.taxaFixa));
   setText('det_lucro_shopee', fmtBRL.format(result.lucro));
@@ -707,8 +733,10 @@ function recalcShopee() {
     pv: result.pv,
     faixaIdx: result.faixaIdx,
     custo: result.custo,
+    margemLucro: result.margemLucro,
     pDas: result.pDas,
     pDesc: result.pDesc,
+    pSpike: result.pSpike,
     lower: result.lower,
     higher: result.higher
   };
@@ -1277,7 +1305,16 @@ function bindMarketplaceFields(prefix) {
 function buildShopeeSimHtml(data) {
   if (!data) return '<p>Sem dados de simulação.</p>';
 
-  const { pv, custo, pDas, pDesc, lower, higher } = data;
+  const {
+    pv,
+    custo,
+    margemLucro,
+    pDas,
+    pDesc,
+    pSpike,
+    lower,
+    higher
+  } = data;
   let html = `<p class="muted">PV atual: ${fmtBRL.format(pv)} - Custo: ${fmtBRL.format(custo)}</p>`;
 
   html += '<h3>Tabela de Faixas</h3>';
@@ -1297,9 +1334,11 @@ function buildShopeeSimHtml(data) {
 
   function simulateFor(pvTest, bracket) {
     const vCom = pvTest * bracket.com;
+    const vMargem = pvTest * margemLucro;
     const vDas = pvTest * pDas;
     const vDesc = pvTest * pDesc;
-    const total = vCom + vDas + vDesc + bracket.tf;
+    const vSpike = pvTest * pSpike;
+    const total = vCom + vMargem + vDas + vDesc + vSpike + bracket.tf;
     const lucroSim = pvTest - custo - total;
     const margemSim = pvTest > 0 ? lucroSim / pvTest : 0;
     return { lucroSim, margemSim, com: bracket.com, tf: bracket.tf };
@@ -1332,12 +1371,20 @@ function buildShopeeSimHtml(data) {
   return html;
 }
 
+let shopeeModalCloseTimer = null;
+
 function showShopeeSimModal() {
   const modal = byId('modal_sim');
   const body = byId('modal_body');
   if (!modal || !body) return;
 
+  if (shopeeModalCloseTimer) {
+    clearTimeout(shopeeModalCloseTimer);
+    shopeeModalCloseTimer = null;
+  }
+
   body.innerHTML = buildShopeeSimHtml(window.lastShopeeSim || null);
+  modal.classList.remove('modal-closing');
   modal.classList.remove('hidden');
   modal.setAttribute('aria-hidden', 'false');
 }
@@ -1346,8 +1393,27 @@ function hideShopeeSimModal() {
   const modal = byId('modal_sim');
   if (!modal) return;
 
-  modal.classList.add('hidden');
-  modal.setAttribute('aria-hidden', 'true');
+  if (modal.classList.contains('hidden') || modal.classList.contains('modal-closing')) return;
+
+  const content = modal.querySelector('.modal-content');
+  const finalizeClose = () => {
+    if (shopeeModalCloseTimer) {
+      clearTimeout(shopeeModalCloseTimer);
+      shopeeModalCloseTimer = null;
+    }
+    modal.classList.add('hidden');
+    modal.classList.remove('modal-closing');
+    modal.setAttribute('aria-hidden', 'true');
+  };
+
+  modal.classList.add('modal-closing');
+
+  if (content) {
+    content.addEventListener('animationend', finalizeClose, { once: true });
+  }
+
+  // Fallback in case animation events are disabled/interrupted.
+  shopeeModalCloseTimer = setTimeout(finalizeClose, 260);
 }
 
 function bindShopeeModal() {
@@ -1373,11 +1439,69 @@ function bindShopeeModal() {
   });
 }
 
+function bindButtonHoldAnimation() {
+  const HOLD_CLASS = 'btn-hold-active';
+
+  function activate(button) {
+    if (!button) return;
+    button.classList.add(HOLD_CLASS);
+  }
+
+  function deactivate(button) {
+    if (!button) return;
+    button.classList.remove(HOLD_CLASS);
+  }
+
+  document.addEventListener('pointerdown', (event) => {
+    const button = event.target.closest('button');
+    if (!button) return;
+    activate(button);
+  });
+
+  document.addEventListener('pointerup', () => {
+    document.querySelectorAll(`button.${HOLD_CLASS}`).forEach((button) => {
+      deactivate(button);
+    });
+  });
+
+  document.addEventListener('pointercancel', () => {
+    document.querySelectorAll(`button.${HOLD_CLASS}`).forEach((button) => {
+      deactivate(button);
+    });
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== ' ' && event.key !== 'Enter') return;
+    const button = event.target.closest('button');
+    if (!button) return;
+    activate(button);
+  });
+
+  document.addEventListener('keyup', (event) => {
+    if (event.key !== ' ' && event.key !== 'Enter') return;
+    const button = event.target.closest('button');
+    if (!button) return;
+    deactivate(button);
+  });
+
+  document.addEventListener('focusout', (event) => {
+    const button = event.target.closest('button');
+    if (!button) return;
+    deactivate(button);
+  });
+}
+
 function init() {
+  const modal = byId('modal_sim');
+  if (modal && modal.parentElement !== document.body) {
+    document.body.appendChild(modal);
+  }
+
   resetNonFixedValuesOnReload();
   bindSharedFields();
   bindSkuLookup();
   bindShopeeModal();
+  bindButtonHoldAnimation();
 
   const resetAllButton = byId('resetBtn_all');
   if (resetAllButton) resetAllButton.addEventListener('click', resetAll);
