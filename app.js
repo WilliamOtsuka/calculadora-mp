@@ -13,6 +13,38 @@ app.use(express.static(path.join(__dirname)));
 
 const TOKEN = process.env.TINY_TOKEN;
 
+function extractTinyCategoryText(value) {
+  if (!value) return '';
+
+  if (typeof value === 'string') return value;
+
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => extractTinyCategoryText(item))
+      .filter(Boolean)
+      .join(' ');
+  }
+
+  if (typeof value === 'object') {
+    return [
+      value.descricao,
+      value.nome,
+      value.categoria,
+      value.descricaoCategoria,
+      value.nomeCategoria,
+      value.caminhoCompleto,
+      value.descricaoCompleta,
+      value.pai,
+      value.filhos
+    ]
+      .map((item) => extractTinyCategoryText(item))
+      .filter(Boolean)
+      .join(' ');
+  }
+
+  return String(value);
+}
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -104,6 +136,11 @@ app.get('/preco-custo/:sku', async (req, res) => {
       sku: produto.codigo,
       nome: produto.nome,
       preco_custo: produto.preco_custo,
+      categoria: extractTinyCategoryText(produto.categoria || produto.categorias || ''),
+      peso_bruto: produto.peso_bruto ?? '',
+      alturaEmbalagem: produto.alturaEmbalagem ?? '',
+      larguraEmbalagem: produto.larguraEmbalagem ?? '',
+      comprimentoEmbalagem: produto.comprimentoEmbalagem ?? '',
     });
 
   } catch (error) {
@@ -186,6 +223,7 @@ app.get('/search', async (req, res) => {
 });
 
 // npx nodemon app.js
+// fly deploy para deployar no fly.io (configurações no fly.toml)
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

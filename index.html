@@ -40,7 +40,7 @@
                         </div>
                         <div>
                             <label>Custo da embalagem <span class="muted">(R$)</span></label>
-                            <div class="row"><input id="shared_embalagem" value="2" type="text" inputmode="decimal"
+                            <div class="row"><input id="shared_embalagem" value="R$ 2,00" type="text" inputmode="decimal"
                                     placeholder="0,00" />
                             </div>
                         </div>
@@ -290,8 +290,16 @@
                                             inputmode="decimal" placeholder="0,00" /></div>
                                 </div>
                                 <div>
+                                    <label>Categoria</label>
+                                    <div class="row"><select id="categoria_magalu">
+                                        <option value="">Selecione uma categoria</option>
+                                        <option value="Alimentos">Alimentos e Bebidas</option>
+                                        <option value="Utilidades">Utilidades Domésticas</option>
+                                    </select></div>
+                                </div>
+                                <div>
                                     <label>Taxa fixa <span class="muted">(R$)</span></label>
-                                    <div class="row"><input id="taxa_fixa_magalu" type="text" inputmode="decimal"
+                                    <div class="row"><input id="taxa_fixa_magalu" type="text" readonly inputmode="decimal"
                                             placeholder="0,00" />
                                     </div>
                                 </div>
@@ -301,16 +309,52 @@
                                             inputmode="decimal" placeholder="0" /><span class="sufix">%</span></div>
                                 </div>
                             </div>
-
                             <div class="grid mt-8">
                                 <div>
-                                    <label>Comissão <span class="muted">(%)</span></label>
-                                    <div class="row"><input id="comissao_magalu" type="text" inputmode="decimal"
+                                    <label>Peso real <span class="muted">(kg)</span></label>
+                                    <div class="row"><input id="peso_real_magalu" type="text" inputmode="decimal"
+                                            placeholder="0,00" /></div>
+                                </div>
+                                <div>
+                                    <label>Frete base <span class="muted">(R$)</span></label>
+                                    <div class="row"><input id="frete_base_magalu" type="text" inputmode="decimal"
+                                            placeholder="0,00" /></div>
+                                </div>
+                            </div>
+                            <div class="grid-3 mt-8">
+                                <div>
+                                    <label>Altura <span class="muted">(cm)</span></label>
+                                    <div class="row"><input id="altura_magalu" type="text" inputmode="decimal"
+                                            placeholder="0,00" /></div>
+                                </div>
+                                <div>
+                                    <label>Largura <span class="muted">(cm)</span></label>
+                                    <div class="row"><input id="largura_magalu" type="text" inputmode="decimal"
+                                            placeholder="0,00" /></div>
+                                </div>
+                                <div>
+                                    <label>Comprimento <span class="muted">(cm)</span></label>
+                                    <div class="row"><input id="comprimento_magalu" type="text" inputmode="decimal"
+                                            placeholder="0,00" /></div>
+                                </div>
+                            </div>
+                            <div class="grid mt-8">
+                                <div>
+                                    <label>SLA de envio</label>
+                                    <div class="row"><select id="sla_envio_magalu">
+                                        <option value="0">&lt; 92%</option>
+                                        <option value="0.25" selected>92% a 97%</option>
+                                        <option value="0.5">&gt; 97%</option>
+                                    </select></div>
+                                </div>
+                                <div>
+                                    <label>Comissão <span class="muted">(auto %)</span></label>
+                                    <div class="row"><input id="comissao_magalu" type="text" readonly inputmode="decimal"
                                             placeholder="0" /><span class="sufix">%</span></div>
                                 </div>
                                 <div>
-                                    <label>Subsídio frete <span class="muted">(%)</span></label>
-                                    <div class="row"><input id="subsidio_magalu" type="text" inputmode="decimal"
+                                    <label>Desconto frete <span class="muted">(auto %)</span></label>
+                                    <div class="row"><input id="subsidio_magalu" type="text" readonly inputmode="decimal"
                                             placeholder="0" /><span class="sufix">%</span></div>
                                 </div>
                             </div>
@@ -441,7 +485,7 @@
                                     <td id="det_comissao_magalu">R$ 0,00</td>
                                 </tr>
                                 <tr>
-                                    <th>Subsídio frete (R$)</th>
+                                    <th>Frete loja (R$)</th>
                                     <td id="det_subsidio_magalu">R$ 0,00</td>
                                 </tr>
                                 <tr>
