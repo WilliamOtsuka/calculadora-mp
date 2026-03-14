@@ -149,6 +149,7 @@ h2#ml {
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   align-items: end;
+  grid-auto-flow: column;
 }
 
 .grid-1 {
@@ -743,4 +744,5 @@ button.btn-hold-active {
 .small-btn {
   padding: 6px 8px;
   font-size: 0.85rem;
+  margin: 10px 0 0;
 }

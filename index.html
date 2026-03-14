@@ -70,6 +70,83 @@
                         <div class="market-card ml">
                             <!-- -----------------------MERCADO LIVRE----------------------- -->
                             <h1 id="ml">Mercado Livre</h1>
+                            <div class="variant-grid mt-8">
+                                <div class="variant-card">
+                                    <h4 class="mt-0">Clássico</h4>
+                                    <div class="result mt-8">
+                                        <div>
+                                            <div class="result-secondary">Preço sugerido</div>
+                                            <div id="pv_ml_classico" class="result-main">R$ 0,00</div>
+                                        </div>
+                                        <div class="text-right min-w-220">
+                                            <div class="result-secondary">Valor líquido</div>
+                                            <div id="liquido_ml_classico" class="result-main liquido-large">R$
+                                                0,00</div>
+                                        </div>
+                                    </div>
+                                    <div class="grid">
+                                        <div>
+                                            <label>Comissão<span class="muted"> (auto %)</span></label>
+                                            <div class="row"><input id="comissao_pct_ml_classico" class="auto-field"
+                                                    type="text" readonly title="Campo calculado automaticamente" /><span
+                                                    class="sufix">%</span></div>
+                                        </div>
+                                        <div>
+                                            <label>Tarifa fixa<span class="muted"> (auto R$)</span></label>
+                                            <div class="row"><input id="tarifa_fixa_ml_classico" class="auto-field"
+                                                    type="text" readonly title="Campo calculado automaticamente" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="grid mt-8">
+                                        <div>
+                                            <label>Total de taxas<span class="muted"> (auto %)</span></label>
+                                            <div class="row"><input id="total_taxas_ml_classico" class="auto-field"
+                                                    type="text" readonly title="Campo calculado automaticamente" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="variant-card">
+                                    <h4 class="mt-0">Premium</h4>
+                                    <div class="result mt-8">
+                                        <div>
+                                            <div class="result-secondary">Preço sugerido</div>
+                                            <div id="pv_ml_premium" class="result-main">R$ 0,00</div>
+                                        </div>
+                                        <div class="text-right min-w-220">
+                                            <div class="result-secondary">Valor líquido</div>
+                                            <div id="liquido_ml_premium" class="result-main liquido-large">R$
+                                                0,00</div>
+                                        </div>
+                                    </div>
+                                    <div class="btns items-end justify-end mt-8">
+                                        <button id="copyBtn_ml" class="primary" type="button">Copiar resultado</button>
+                                    </div>
+                                    <div class="grid">
+                                        <div>
+                                            <label>Comissão<span class="muted"> (auto %)</span></label>
+                                            <div class="row"><input id="comissao_pct_ml_premium" class="auto-field"
+                                                    type="text" readonly title="Campo calculado automaticamente" /><span
+                                                    class="sufix">%</span></div>
+                                        </div>
+                                        <div>
+                                            <label>Tarifa fixa<span class="muted"> (auto R$)</span></label>
+                                            <div class="row"><input id="tarifa_fixa_ml_premium" class="auto-field"
+                                                    type="text" readonly title="Campo calculado automaticamente" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="grid mt-8">
+                                        <div>
+                                            <label>Total de taxas<span class="muted"> (auto %)</span></label>
+                                            <div class="row"><input id="total_taxas_ml_premium" class="auto-field"
+                                                    type="text" readonly title="Campo calculado automaticamente" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="grid mt-8">
                                 <div>
                                     <label>Custo do produto <span class="muted"> (auto R$)</span></label>
@@ -112,83 +189,6 @@
                                             placeholder="0" /><span class="sufix">%</span></div>
                                 </div>
                             </div>
-                            <div class="variant-grid mt-8">
-                                <div class="variant-card">
-                                    <h4 class="mt-0">Clássico</h4>
-                                    <div class="grid">
-                                        <div>
-                                            <label>Comissão<span class="muted"> (auto %)</span></label>
-                                            <div class="row"><input id="comissao_pct_ml_classico" class="auto-field"
-                                                    type="text" readonly title="Campo calculado automaticamente" /><span
-                                                    class="sufix">%</span></div>
-                                        </div>
-                                        <div>
-                                            <label>Tarifa fixa<span class="muted"> (auto R$)</span></label>
-                                            <div class="row"><input id="tarifa_fixa_ml_classico" class="auto-field"
-                                                    type="text" readonly title="Campo calculado automaticamente" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="grid mt-8">
-                                        <div>
-                                            <label>Total de taxas<span class="muted"> (auto %)</span></label>
-                                            <div class="row"><input id="total_taxas_ml_classico" class="auto-field"
-                                                    type="text" readonly title="Campo calculado automaticamente" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="result mt-8">
-                                        <div>
-                                            <div class="result-secondary">Preço sugerido</div>
-                                            <div id="pv_ml_classico" class="result-main">R$ 0,00</div>
-                                        </div>
-                                        <div class="text-right min-w-220">
-                                            <div class="result-secondary">Valor líquido</div>
-                                            <div id="liquido_ml_classico" class="result-main liquido-large">R$
-                                                0,00</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="variant-card">
-                                    <h4 class="mt-0">Premium</h4>
-                                    <div class="grid">
-                                        <div>
-                                            <label>Comissão<span class="muted"> (auto %)</span></label>
-                                            <div class="row"><input id="comissao_pct_ml_premium" class="auto-field"
-                                                    type="text" readonly title="Campo calculado automaticamente" /><span
-                                                    class="sufix">%</span></div>
-                                        </div>
-                                        <div>
-                                            <label>Tarifa fixa<span class="muted"> (auto R$)</span></label>
-                                            <div class="row"><input id="tarifa_fixa_ml_premium" class="auto-field"
-                                                    type="text" readonly title="Campo calculado automaticamente" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="grid mt-8">
-                                        <div>
-                                            <label>Total de taxas<span class="muted"> (auto %)</span></label>
-                                            <div class="row"><input id="total_taxas_ml_premium" class="auto-field"
-                                                    type="text" readonly title="Campo calculado automaticamente" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="result mt-8">
-                                        <div>
-                                            <div class="result-secondary">Preço sugerido</div>
-                                            <div id="pv_ml_premium" class="result-main">R$ 0,00</div>
-                                        </div>
-                                        <div class="text-right min-w-220">
-                                            <div class="result-secondary">Valor líquido</div>
-                                            <div id="liquido_ml_premium" class="result-main liquido-large">R$
-                                                0,00</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="btns items-end justify-end mt-8">
-                                <button id="copyBtn_ml" class="primary" type="button">Copiar resultado</button>
-                            </div>
 
                             <div id="msg_ml" class="danger mt-8 hidden"></div>
                             <div class="info mt-10">Regras: até R$120 (Clássico = R$6 fixo, Premium = R$7 fixo). Acima
@@ -199,6 +199,21 @@
                         <!-- -----------------------SHOPEE----------------------- -->
                         <div class="market-card shopee">
                             <h1 id="shopee">Shopee</h1>
+                            <div class="result mt-12">
+                                <div>
+                                    <div class="result-secondary">PV sugerido</div>
+                                    <div class="pv-row">
+                                        <div id="pv_shopee" class="result-main">R$ 0,00</div>
+                                        <button id="copyBtn_shopee" class="primary" type="button">Copiar
+                                            resultado</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="msg_shopee" class="danger mt-8 hidden"></div>
+                            <div class="btns items-end justify-end">
+                                <button id="simular_shopee_btn" class="primary small-btn" type="button">Simular
+                                    faixas</button>
+                            </div>
                             <div class="grid">
                                 <div>
                                     <label>Custo do produto <span class="muted"> (auto R$)</span></label>
@@ -258,27 +273,25 @@
                                     <div class="row"><input id="total_taxas_shopee" class="auto-field" type="text"
                                             readonly title="Campo calculado automaticamente" /></div>
                                 </div>
-                                <div class="btns items-end justify-end">
-                                    <button id="simular_shopee_btn" class="primary small-btn" type="button">Simular
-                                        faixas</button>
-                                </div>
                             </div>
-
-                            <div class="result mt-12">
-                                <div>
-                                    <div class="result-secondary">PV sugerido</div>
-                                    <div class="pv-row">
-                                        <div id="pv_shopee" class="result-main">R$ 0,00</div>
-                                        <button id="copyBtn_shopee" class="primary" type="button">Copiar
-                                            resultado</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="msg_shopee" class="danger mt-8 hidden"></div>
                         </div>
                         <div class="market-card magalu">
                             <!-- -----------------------MAGALU----------------------- -->
                             <h1 id="magalu">Magalu</h1>
+                            <div class="result mt-12">
+                                <div>
+                                    <div class="result-secondary">PV sugerido</div>
+                                    <div class="pv-row">
+                                        <div id="pv_magalu" class="result-main">R$ 0,00</div>
+                                        <button id="copyBtn_magalu" class="primary" type="button">Copiar
+                                            resultado</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="btns items-end justify-end">
+                            </div>
+                            <div id="msg_magalu" class="danger mt-8 hidden"></div>
+                            
                             <div class="grid">
                                 <div>
                                     <label>Custo do produto <span class="muted"> (auto R$)</span></label>
@@ -385,18 +398,7 @@
                                     <div class="row"><input id="total_taxas_magalu" class="auto-field" type="text"
                                             readonly title="Campo calculado automaticamente" /></div>
                                 </div>
-                                <div class="btns items-end justify-end">
-                                    <button id="copyBtn_magalu" class="primary" type="button">Copiar resultado</button>
-                                </div>
                             </div>
-
-                            <div class="result mt-12">
-                                <div>
-                                    <div class="result-secondary">PV sugerido</div>
-                                    <div id="pv_magalu" class="result-main">R$ 0,00</div>
-                                </div>
-                            </div>
-                            <div id="msg_magalu" class="danger mt-8 hidden"></div>
                         </div>
                     </div>
                 </div>
