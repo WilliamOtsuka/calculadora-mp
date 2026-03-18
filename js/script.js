@@ -15,7 +15,6 @@ const ZERO_CURRENCY = 'R$ 0,00';
 const MAGALU_COMISSAO = 0.148;
 const MAGALU_FRETE_GRATIS_THRESHOLD = 79;
 
-// Base freight values (0% discount column). Discount is applied separately via SLA.
 const MAGALU_FREIGHT_TABLE = [
   { max: 0.5,   base: 35.90 },
   { max: 1,     base: 40.90 },
@@ -353,8 +352,7 @@ function getMagaluFreightDiscount() {
   const raw = String(getFieldValue('sla_envio', 'magalu') || '').trim();
   if (!raw) return 0;
 
-  // Select values are configured as decimal fractions (0, 0.25, 0.5).
-  // Keep this parse independent from BRL parsing rules used in money fields.
+
   const normalized = raw.replace(',', '.');
   const numeric = Number(normalized);
   if (!Number.isFinite(numeric)) return 0;
@@ -383,7 +381,7 @@ function computeMagaluResult() {
 
   const pesoCubado = (altura * largura * comprimento) / 6000;
   const pesoConsiderado = Math.max(pesoReal, pesoCubado);
-  const freteLoja = freteBase; // SLA discount already applied in recalcMagalu()
+  const freteLoja = freteBase;
 
   const percentuais = pCom + pDas + pDesc + pOutras + margemLucro;
   const totalTaxasPct = pCom + pDas + pDesc + pOutras;
@@ -466,7 +464,6 @@ function recalcMagalu() {
     descontoEl.readOnly = true;
   }
 
-  // Auto-fill frete_base from freight table based on pesoConsiderado
   const pesoReal = getNumberField('peso_real', 'magalu');
   const altura = getNumberField('altura', 'magalu');
   const largura = getNumberField('largura', 'magalu');
@@ -927,7 +924,6 @@ function parseTinyNumericValue(value) {
   const raw = String(value).trim();
   if (!raw) return 0;
 
-  // Tiny costuma retornar números com ponto decimal (ex.: "6.0").
   if (/^-?\d+(\.\d+)?$/.test(raw)) {
     const parsed = Number(raw);
     return Number.isFinite(parsed) ? parsed : 0;
@@ -1281,7 +1277,6 @@ function bindMarketplaceFields(prefix) {
     });
   }
 
-  // Magalu: when category changes, set `taxa_fixa_magalu` according to mapping
   if (prefix === 'magalu') {
     const categoriaEl = byId('categoria_magalu');
     const comissaoEl = byId('comissao_magalu');
@@ -1412,7 +1407,6 @@ function hideShopeeSimModal() {
     content.addEventListener('animationend', finalizeClose, { once: true });
   }
 
-  // Fallback in case animation events are disabled/interrupted.
   shopeeModalCloseTimer = setTimeout(finalizeClose, 260);
 }
 
@@ -1491,6 +1485,68 @@ function bindButtonHoldAnimation() {
   });
 }
 
+function bindMarketCardExpandToggle() {
+  const formsContainer = document.querySelector('.market-flex.market-forms');
+  if (!formsContainer) return;
+
+  const cards = Array.from(formsContainer.querySelectorAll('.market-card'));
+  const buttons = Array.from(formsContainer.querySelectorAll('.toggle-market-card-btn'));
+  const ANIM_DURATION_MS = 230;
+
+  function clearAnimClasses(card) {
+    card.classList.remove('is-expanding');
+    card.classList.remove('is-collapsing');
+  }
+
+  function animateExpand(card) {
+    clearAnimClasses(card);
+    card.classList.add('is-expanding');
+    setTimeout(() => card.classList.remove('is-expanding'), ANIM_DURATION_MS);
+  }
+
+  function animateCollapse(card) {
+    clearAnimClasses(card);
+    card.classList.add('is-collapsing');
+    setTimeout(() => card.classList.remove('is-collapsing'), ANIM_DURATION_MS);
+  }
+
+  function resetButtons() {
+    buttons.forEach((button) => {
+      button.textContent = 'Expandir';
+      button.setAttribute('aria-pressed', 'false');
+    });
+  }
+
+  function collapseAll(withAnimation = false) {
+    cards.forEach((card) => {
+      if (card.classList.contains('is-expanded') && withAnimation) {
+        animateCollapse(card);
+      }
+      card.classList.remove('is-expanded');
+    });
+    formsContainer.classList.remove('expanded-mode');
+    resetButtons();
+  }
+
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const card = button.closest('.market-card');
+      if (!card) return;
+
+      const alreadyExpanded = card.classList.contains('is-expanded');
+      collapseAll(true);
+
+      if (alreadyExpanded) return;
+
+      card.classList.add('is-expanded');
+      animateExpand(card);
+      formsContainer.classList.add('expanded-mode');
+      button.textContent = 'Recolher';
+      button.setAttribute('aria-pressed', 'true');
+    });
+  });
+}
+
 function init() {
   const modal = byId('modal_sim');
   if (modal && modal.parentElement !== document.body) {
@@ -1502,6 +1558,7 @@ function init() {
   bindSkuLookup();
   bindShopeeModal();
   bindButtonHoldAnimation();
+  bindMarketCardExpandToggle();
 
   const resetAllButton = byId('resetBtn_all');
   if (resetAllButton) resetAllButton.addEventListener('click', resetAll);

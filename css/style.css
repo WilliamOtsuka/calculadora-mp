@@ -251,7 +251,7 @@ select {
 }
 
 input:focus {
-  border-color: #334155;
+  border-color: #294b79;
   box-shadow: 0 0 0 3px rgba(51, 65, 85, 0.25);
 }
 
@@ -336,6 +336,15 @@ button {
   font-weight: 600;
 }
 
+button#buscar_sku_btn {
+  background: #22c55e1a;
+  /* 10% */
+  border-color: #22c55e66;
+  /* ~40% */
+  color: #67c58a;
+  transition: background 120ms ease-out, color 120ms ease-out, border-color 120ms ease-out;
+}
+
 button#buscar_sku_btn:hover {
   background: #0b2012;
   color: var(--accent);
@@ -351,6 +360,24 @@ button {
 }
 
 button.btn-hold-active {
+  transform: scale(0.95);
+  filter: brightness(0.96);
+}
+
+button#resetBtn_all {
+  border-color: red;
+  background: rgba(255, 0, 0, 0.1);
+  transition: background 120ms ease-out, color 120ms ease-out, border-color 120ms ease-out;
+  color: #df6262;
+}
+
+button#resetBtn_all:hover {
+  background: rgba(255, 0, 0, 0.2);
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+button#resetBtn_all:active {
   transform: scale(0.95);
   filter: brightness(0.96);
 }
@@ -470,6 +497,72 @@ button.btn-hold-active {
   /* default accent inherits from root */
   margin: 0 0 12px;
   box-shadow: 0 0 20px #0000006b;
+}
+
+.market-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.toggle-market-card-btn {
+  font-size: 0.82rem;
+  padding: 6px 10px;
+  border-radius: 999px;
+  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+.market-forms .market-card {
+  transition: transform 220ms ease, box-shadow 220ms ease, opacity 220ms ease;
+}
+
+.market-forms.expanded-mode .market-card {
+  opacity: 0.98;
+}
+
+.market-forms .market-card.is-expanded {
+  grid-column: 1 / -1;
+  order: -1;
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.42);
+}
+
+.market-forms .market-card.is-expanding {
+  animation: marketCardExpandIn 220ms ease;
+}
+
+.market-forms .market-card.is-collapsing {
+  animation: marketCardCollapseOut 200ms ease;
+}
+
+@keyframes marketCardExpandIn {
+  from {
+    opacity: 0.9;
+    transform: translateY(8px) scale(0.99);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(-2px) scale(1);
+  }
+}
+
+@keyframes marketCardCollapseOut {
+  from {
+    opacity: 1;
+    transform: translateY(-2px) scale(1);
+  }
+
+  to {
+    opacity: 0.92;
+    transform: translateY(4px) scale(0.99);
+  }
+}
+
+.market-forms .market-card.is-expanded .toggle-market-card-btn {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, #0b1220);
 }
 
 .market-card h4 {

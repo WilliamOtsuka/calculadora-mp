@@ -13,14 +13,15 @@ app.use(express.static(path.join(__dirname)));
 
 const TOKEN = process.env.TINY_TOKEN;
 
-function extractTinyCategoryText(value) {
+// Extrai texto descritivo de categorias retornadas pelo Tiny
+function extrairCategoriaTiny(value) {
   if (!value) return '';
 
   if (typeof value === 'string') return value;
 
   if (Array.isArray(value)) {
     return value
-      .map((item) => extractTinyCategoryText(item))
+      .map((item) => extrairCategoriaTiny(item))
       .filter(Boolean)
       .join(' ');
   }
@@ -37,12 +38,135 @@ function extractTinyCategoryText(value) {
       value.pai,
       value.filhos
     ]
-      .map((item) => extractTinyCategoryText(item))
+      .map((item) => extrairCategoriaTiny(item))
       .filter(Boolean)
       .join(' ');
   }
 
   return String(value);
+}
+
+// Converte valores de custo vindos do Tiny para número (aceita '.', ',')
+function parseCustoTiny(value) {
+  if (value === null || value === undefined || value === '') return 0;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+
+  const raw = String(value).trim();
+  if (!raw) return 0;
+
+  // Aceita formatos como "8.99", "8,99", "1.234,56" e "1234.56".
+  if (/^-?\d+(\.\d+)?$/.test(raw)) {
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  const normalized = raw
+    .replace(/R\$\s?/gi, '')
+    .replace(/\s+/g, '')
+    .replace(/\./g, '')
+    .replace(',', '.');
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+// Busca Produto via endpoint de pesquisa do Tiny e retorna o melhor candidato
+async function buscarProdutoPorTermo(term) {
+  const pesquisaResponse = await axios.get('https://api.tiny.com.br/api2/produtos.pesquisa.php', {
+    params: { token: TOKEN, pesquisa: term, formato: 'json' }
+  });
+
+  const produtos = pesquisaResponse?.data?.retorno?.produtos || [];
+  if (!Array.isArray(produtos) || produtos.length === 0) return null;
+
+  const normalizedTerm = String(term || '').toLowerCase();
+  const mapped = produtos.map((item) => {
+    const produto = item.produto || {};
+    return {
+      id: produto.id,
+      codigo: String(produto.codigo || '').toLowerCase(),
+      nome: String(produto.descricao || produto.nome || produto.titulo || '').toLowerCase()
+    };
+  });
+
+  function scoreItem(candidate) {
+    if (!candidate) return 0;
+    const codigo = candidate.codigo || '';
+    const nome = candidate.nome || '';
+    let score = 0;
+    if (codigo === normalizedTerm) score += 1000;
+    if (codigo && normalizedTerm && codigo.startsWith(normalizedTerm)) score += 800;
+    if (codigo && normalizedTerm && codigo.includes(normalizedTerm)) score += 600;
+    if (nome && normalizedTerm && nome.includes(normalizedTerm)) score += 400;
+    return score;
+  }
+
+  let best = mapped[0];
+  let bestScore = scoreItem(best);
+
+  for (const candidate of mapped) {
+    const score = scoreItem(candidate);
+    if (score > bestScore) {
+      best = candidate;
+      bestScore = score;
+    }
+  }
+
+  return best && best.id ? best : mapped[0];
+}
+
+// Retorna o objeto `produto` completo a partir do ID (produto.obter)
+async function obterProdutoTinyPorId(id) {
+  const produtoResponse = await axios.get('https://api.tiny.com.br/api2/produto.obter.php', {
+    params: {
+      token: TOKEN,
+      id,
+      formato: 'json'
+    }
+  });
+
+  return produtoResponse?.data?.retorno?.produto || null;
+}
+
+// Envia alteração de produto para o Tiny (recebe objeto `produto` já montado)
+async function alterarProdutoTiny(produto) {
+  const response = await axios.post(
+    'https://api.tiny.com.br/api2/produto.alterar.php',
+    null,
+    {
+      params: {
+        token: TOKEN,
+        formato: 'json',
+        produto: JSON.stringify(produto)
+      }
+    }
+  );
+
+  console.log('Retorno Tiny:', JSON.stringify(response?.data, null, 2));
+  return response.data;
+}
+
+// Wrapper simples para buscar produto completo por ID (mesma função que obterProdutoTinyPorId)
+// Mantido para clareza de uso no fluxo de atualização.
+async function obterProdutoPorId(id) {
+  return await obterProdutoTinyPorId(id);
+}
+
+
+
+// Busca produto pelo SKU: pesquisa e depois obtém o objeto completo
+async function buscarProdutoPorSKU(sku) {
+  const productCandidate = await buscarProdutoPorTermo(sku);
+  if (!productCandidate || !productCandidate.id) return null;
+
+  const produto = await obterProdutoTinyPorId(productCandidate.id);
+  if (!produto) return null;
+
+  if (!produto.id) {
+    produto.id = productCandidate.id;
+  }
+
+  return produto;
 }
 
 app.get('/', (req, res) => {
@@ -54,51 +178,13 @@ app.get('/preco-custo/:sku', async (req, res) => {
   const { sku } = req.params;
 
   try {
-    // 1️⃣ Buscar produto pelo termo (pode ser SKU, ou parte do nome)
-    const pesquisaResponse = await axios.get('https://api.tiny.com.br/api2/produtos.pesquisa.php', {
-      params: { token: TOKEN, pesquisa: sku, formato: 'json' }
-    });
-
-    const produtos = pesquisaResponse.data.retorno.produtos;
-
-    if (!produtos || produtos.length === 0) {
+    const productCandidate = await buscarProdutoPorTermo(sku);
+    if (!productCandidate || !productCandidate.id) {
       return res.status(404).json({ erro: 'Produto não encontrado' });
     }
+    const produtoId = productCandidate.id;
 
-    // Normaliza resultados e escolhe o melhor candidato
-    const term = String(sku || '').toLowerCase();
-    const mapped = (produtos || []).map(p => {
-      const produto = p.produto || {};
-      return {
-        raw: p,
-        id: produto.id,
-        codigo: String(produto.codigo || '').toLowerCase(),
-        nome: String(produto.descricao || produto.nome || produto.titulo || '').toLowerCase()
-      };
-    });
-
-    function scoreItem(it) {
-      if (!it) return 0;
-      const codigo = it.codigo || '';
-      const nome = it.nome || '';
-      let score = 0;
-      if (codigo === term) score += 1000; // SKU exato
-      if (codigo && term && codigo.startsWith(term)) score += 800; // SKU começa com term
-      if (codigo && term && codigo.includes(term)) score += 600; // SKU contém term
-      if (nome && term && nome.includes(term)) score += 400; // nome contém term
-      return score;
-    }
-
-    let best = mapped[0];
-    let bestScore = scoreItem(best);
-    for (const m of mapped) {
-      const sc = scoreItem(m);
-      if (sc > bestScore) { best = m; bestScore = sc; }
-    }
-
-    const produtoId = (best && best.id) ? best.id : (mapped[0] && mapped[0].id);
-
-    // 2️⃣ Buscar produto pelo ID
+    // Buscar produto pelo ID
     const produtoResponse = await axios.get(
       'https://api.tiny.com.br/api2/produto.obter.php',
       {
@@ -136,7 +222,7 @@ app.get('/preco-custo/:sku', async (req, res) => {
       sku: produto.codigo,
       nome: produto.nome,
       preco_custo: produto.preco_custo,
-      categoria: extractTinyCategoryText(produto.categoria || produto.categorias || ''),
+      categoria: extrairCategoriaTiny(produto.categoria || produto.categorias || ''),
       peso_bruto: produto.peso_bruto ?? '',
       alturaEmbalagem: produto.alturaEmbalagem ?? '',
       larguraEmbalagem: produto.larguraEmbalagem ?? '',
@@ -146,6 +232,74 @@ app.get('/preco-custo/:sku', async (req, res) => {
   } catch (error) {
     console.error(error.response?.data || error.message);
     res.status(500).json({ erro: 'Erro ao consultar Tiny' });
+  }
+});
+
+app.post('/preco-custo/atualizar', async (req, res) => {
+  try {
+    const sku = String(req.body?.sku || '').trim();
+    const precoCusto = parseCustoTiny(req.body?.preco_custo);
+
+    if (!TOKEN) {
+      return res.status(500).json({ erro: 'TINY_TOKEN não configurado no servidor.' });
+    }
+
+    if (!sku) {
+      return res.status(400).json({ erro: 'SKU obrigatório' });
+    }
+
+    if (!(precoCusto > 0)) {
+      return res.status(400).json({ erro: 'Preço de custo inválido' });
+    }
+
+    const produto = await buscarProdutoPorSKU(sku);
+    if (!produto?.id) {
+      return res.status(404).json({ erro: 'Produto não encontrado' });
+    }
+
+    if (produto.idProdutoPai && Number(produto.idProdutoPai) > 0) {
+      console.warn('Produto é variação:', sku);
+    }
+
+    // Obter produto completo antes de montar o payload
+    const produtoAtual = await obterProdutoPorId(produto.id);
+    if (!produtoAtual) {
+      return res.status(404).json({ erro: 'Não foi possível obter dados completos do produto no Tiny.' });
+    }
+
+    const produtoPayload = {
+      id: produto.idProdutoPai,
+      codigo: produtoAtual.codigo,
+      nome: produtoAtual.nome,
+      tipo: produtoAtual.tipo,
+      situacao: produtoAtual.situacao,
+      unidade: produtoAtual.unidade,
+      preco_custo: Number(precoCusto)
+    };
+
+    const tinyResponse = await alterarProdutoTiny(produtoPayload);
+
+    const retorno = tinyResponse?.retorno;
+
+    if (String(retorno?.status || '').toUpperCase() !== 'OK') {
+      return res.status(400).json({
+        erro: 'Erro no Tiny',
+        detalhe: retorno
+      });
+    }
+
+    return res.json({
+      ok: true,
+      sku,
+      preco_custo: Number(precoCusto).toFixed(2),
+      mensagem: 'Atualizado com sucesso no Tiny'
+    });
+  } catch (err) {
+    console.error(err?.response?.data || err.message);
+
+    return res.status(500).json({
+      erro: 'Erro ao atualizar no Tiny'
+    });
   }
 });
 
@@ -198,13 +352,11 @@ app.get('/search', async (req, res) => {
       if (sku.toLowerCase() === qLower) score += 1000;
       if (sku.toLowerCase().startsWith(qLower)) score += 800;
       if (sku.toLowerCase().includes(qLower)) score += 400;
-      // only use name matches when field is not 'sku'
       if (field !== 'sku' && nome.includes(qLower)) score += 200;
-      // small boost for numeric queries when sku starts with numeric prefix
       if (/^\d+$/.test(q) && sku.startsWith(q)) score += 50;
       return score;
     }
-    // If field=sku, filter out items that have no sku match at all (avoid name-only matches)
+
     let candidates = normalized;
     if (field === 'sku') {
       candidates = normalized.filter(it => String(it.sku || '').toLowerCase().includes(qLower));
@@ -214,7 +366,6 @@ app.get('/search', async (req, res) => {
     scored.sort((a, b) => b.score - a.score);
 
     const items = scored.slice(0, 50).map(({ id, sku, nome }) => ({ id, sku, nome }));
-    // Debug log (opcional): console.log(`search q=${q} results`, items.map(i=>i.sku));
     res.json(items);
   } catch (err) {
     console.error('search error', err.response?.data || err.message);

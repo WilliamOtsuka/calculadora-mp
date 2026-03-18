@@ -62,14 +62,17 @@
                                     placeholder="0" /><span class="sufix">%</span></div>
                         </div>
 
-                        <div class="btns mt-8">
+                        <div class="btns" style="margin-bottom: 4%;">
                             <button id="resetBtn_all" type="button">Limpar tudo</button>
                         </div>
                     </div>
-                    <div class="market-flex">
+                    <div class="market-flex market-forms">
                         <div class="market-card ml">
                             <!-- -----------------------MERCADO LIVRE----------------------- -->
-                            <h1 id="ml">Mercado Livre</h1>
+                            <div class="market-card-header">
+                                <h1 id="ml">Mercado Livre</h1>
+                                <button type="button" class="toggle-market-card-btn" data-market="ml" aria-pressed="false">Expandir</button>
+                            </div>
                             <div class="variant-grid mt-8">
                                 <div class="variant-card">
                                     <h4 class="mt-0">Clássico</h4>
@@ -198,7 +201,10 @@
                         </div>
                         <!-- -----------------------SHOPEE----------------------- -->
                         <div class="market-card shopee">
-                            <h1 id="shopee">Shopee</h1>
+                            <div class="market-card-header">
+                                <h1 id="shopee">Shopee</h1>
+                                <button type="button" class="toggle-market-card-btn" data-market="shopee" aria-pressed="false">Expandir</button>
+                            </div>
                             <div class="result mt-12">
                                 <div>
                                     <div class="result-secondary">PV sugerido</div>
@@ -277,7 +283,10 @@
                         </div>
                         <div class="market-card magalu">
                             <!-- -----------------------MAGALU----------------------- -->
-                            <h1 id="magalu">Magalu</h1>
+                            <div class="market-card-header">
+                                <h1 id="magalu">Magalu</h1>
+                                <button type="button" class="toggle-market-card-btn" data-market="magalu" aria-pressed="false">Expandir</button>
+                            </div>
                             <div class="result mt-12">
                                 <div>
                                     <div class="result-secondary">PV sugerido</div>
