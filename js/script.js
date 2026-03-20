@@ -908,6 +908,12 @@ function resetNonFixedValuesOnReload() {
     resetMarketplaceOutputs(prefix);
   }
 
+  const sharedSpikeDay = byId('shared_spike_day');
+  if (sharedSpikeDay) sharedSpikeDay.value = '2,5';
+
+  setValue('spike_day_shopee', '2,5');
+  setValue('sla_envio_magalu', '0.5');
+
   syncInitialSharedValues();
 }
 
@@ -1221,6 +1227,39 @@ function copyMarketplaceResult(prefix) {
   const nome = byId('tiny_nome')?.value || 'Produto';
   const sku = byId('tiny_sku')?.value || '—';
   return `${nome};${sku};${pvSemRS}`;
+}
+
+function extractPvNumericValue(rawValue) {
+  return String(rawValue || '')
+    .replace(/R\$\s?/g, '')
+    .replace(/\s+/g, '')
+    .trim();
+}
+
+function bindCopyPvValueButtons() {
+  const buttons = Array.from(document.querySelectorAll('.copy-pv-icon-btn'));
+
+  buttons.forEach((button) => {
+    button.addEventListener('click', async () => {
+      const targetId = button.dataset.pvTarget;
+      // add click efect
+        button.classList.add('clicked');
+        setTimeout(() => {
+          button.classList.remove('clicked');
+        }, 100);
+
+      if (!targetId) return;
+
+      const pvText = byId(targetId)?.textContent || '';
+      const valueOnly = extractPvNumericValue(pvText);
+      if (!valueOnly || valueOnly === '—') return;
+
+      try {
+        await navigator.clipboard.writeText(valueOnly);
+      } catch {
+      }
+    });
+  });
 }
 
 function bindMarketplaceFields(prefix) {
@@ -1556,6 +1595,7 @@ function init() {
   resetNonFixedValuesOnReload();
   bindSharedFields();
   bindSkuLookup();
+  bindCopyPvValueButtons();
   bindShopeeModal();
   bindButtonHoldAnimation();
   bindMarketCardExpandToggle();
