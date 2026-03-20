@@ -5,7 +5,7 @@
   --text: #e5e7eb;
   --accent: #22c55e;
   --warn: #f59e0b;
-  --danger: #ef4444;
+  --danger: #ff0000;
   --border: #444b55;
 }
 
@@ -290,6 +290,27 @@ input:focus {
   color: var(--muted);
 }
 
+.missing-fields-alert {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 6px;
+  border: 1px solid var(--danger);
+  border-radius: 999px;
+  color: var(--danger);
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: help;
+}
+
+.missing-fields-alert:hover {
+  border-color: #ff0000ce;
+  color: #ff0000ce;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -365,7 +386,7 @@ button.btn-hold-active {
 }
 
 button#resetBtn_all {
-  border-color: red;
+  border-color: var(--danger);
   background: rgba(255, 0, 0, 0.1);
   transition: background 120ms ease-out, color 120ms ease-out, border-color 120ms ease-out;
   color: #df6262;

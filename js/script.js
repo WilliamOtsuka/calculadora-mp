@@ -15,6 +15,46 @@ const ZERO_CURRENCY = 'R$ 0,00';
 const MAGALU_COMISSAO = 0.148;
 const MAGALU_FRETE_GRATIS_THRESHOLD = 79;
 
+const PV_ALERT_TARGETS = {
+  ml: [
+    '.market-card.ml .variant-card:nth-child(1) .result .result-secondary',
+    '.market-card.ml .variant-card:nth-child(2) .result .result-secondary'
+  ],
+  shopee: ['.market-card.shopee .result-secondary'],
+  magalu: ['.market-card.magalu .result-secondary']
+};
+
+const PV_ALERT_REQUIRED_FIELDS = {
+  ml: [
+    { id: 'shared_custo', label: 'Custo do produto' },
+    { id: 'shared_embalagem', label: 'Custo da embalagem' },
+    { id: 'shared_margem_lucro', label: 'Margem de lucro' },
+    { id: 'shared_das', label: 'DAS Simples' },
+    { id: 'shared_descontos', label: 'Margem p/ descontos' }
+  ],
+  shopee: [
+    { id: 'shared_custo', label: 'Custo do produto' },
+    { id: 'shared_embalagem', label: 'Custo da embalagem' },
+    { id: 'shared_margem_lucro', label: 'Margem de lucro' },
+    { id: 'shared_das', label: 'DAS Simples' },
+    { id: 'shared_descontos', label: 'Margem p/ descontos' },
+    { id: 'spike_day_shopee', label: 'Spike Day' }
+  ],
+  magalu: [
+    { id: 'shared_custo', label: 'Custo do produto' },
+    { id: 'shared_embalagem', label: 'Custo da embalagem' },
+    { id: 'shared_margem_lucro', label: 'Margem de lucro' },
+    { id: 'shared_das', label: 'DAS Simples' },
+    { id: 'shared_descontos', label: 'Margem p/ descontos' },
+    { id: 'categoria_magalu', label: 'Categoria' },
+    { id: 'peso_real_magalu', label: 'Peso real' },
+    { id: 'altura_magalu', label: 'Altura' },
+    { id: 'largura_magalu', label: 'Largura' },
+    { id: 'comprimento_magalu', label: 'Comprimento' },
+    { id: 'frete_base_magalu', label: 'Frete base' }
+  ]
+};
+
 const MAGALU_FREIGHT_TABLE = [
   { max: 0.5,   base: 35.90 },
   { max: 1,     base: 40.90 },
@@ -69,6 +109,81 @@ function setText(id, text) {
 function setValue(id, value) {
   const element = byId(id);
   if (element) element.value = value;
+}
+
+function hasMeaningfulValue(element) {
+  if (!element) return false;
+
+  if (element.tagName === 'SELECT') {
+    return String(element.value || '').trim() !== '';
+  }
+
+  const raw = String(element.value || '').trim();
+  if (!raw) return false;
+
+  const normalized = raw
+    .replace(/R\$\s?/gi, '')
+    .replace(/%/g, '')
+    .replace(/\s+/g, '');
+
+  return normalized !== '';
+}
+
+function getMissingRequiredFields(prefix) {
+  const required = PV_ALERT_REQUIRED_FIELDS[prefix] || [];
+  const missing = [];
+
+  for (const field of required) {
+    const element = byId(field.id);
+    if (!hasMeaningfulValue(element)) {
+      missing.push(field.label);
+    }
+  }
+
+  return missing;
+}
+
+function updatePvMissingAlert(prefix) {
+  const missingFields = getMissingRequiredFields(prefix);
+  const tooltip = `Campos faltantes: ${missingFields.join(', ')}`;
+  const selectors = PV_ALERT_TARGETS[prefix] || [];
+
+  selectors.forEach((_, index) => {
+    const alert = byId(`pv_missing_alert_${prefix}_${index}`);
+    if (!alert) return;
+
+    if (!missingFields.length) {
+      alert.classList.add('hidden');
+      alert.removeAttribute('title');
+      alert.removeAttribute('aria-label');
+      return;
+    }
+
+    alert.classList.remove('hidden');
+    alert.title = tooltip;
+    alert.setAttribute('aria-label', tooltip);
+  });
+}
+
+function initPvMissingAlerts() {
+  Object.entries(PV_ALERT_TARGETS).forEach(([prefix, selectors]) => {
+    selectors.forEach((selector, index) => {
+      const title = document.querySelector(selector);
+      if (!title) return;
+
+      if (byId(`pv_missing_alert_${prefix}_${index}`)) return;
+
+      const alert = document.createElement('span');
+      alert.id = `pv_missing_alert_${prefix}_${index}`;
+      alert.className = 'missing-fields-alert hidden';
+      alert.textContent = '!';
+      title.appendChild(alert);
+    });
+  });
+
+  updatePvMissingAlert('ml');
+  updatePvMissingAlert('shopee');
+  updatePvMissingAlert('magalu');
 }
 
 function getMarketplaceFields(prefix) {
@@ -797,16 +912,21 @@ function recalc(prefix) {
 
   if (prefix === 'ml') {
     recalcMercadoLivre();
+    updatePvMissingAlert('ml');
+    updatePvMissingAlert('shopee');
+    updatePvMissingAlert('magalu');
     return;
   }
 
   if (prefix === 'shopee') {
     recalcShopee();
+    updatePvMissingAlert('shopee');
     return;
   }
 
   if (prefix === 'magalu') {
     recalcMagalu();
+    updatePvMissingAlert('magalu');
     return;
   }
 
@@ -1592,6 +1712,7 @@ function init() {
     document.body.appendChild(modal);
   }
 
+  initPvMissingAlerts();
   resetNonFixedValuesOnReload();
   bindSharedFields();
   bindSkuLookup();
