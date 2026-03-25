@@ -48,8 +48,15 @@
 
                         <div>
                             <label>Margem de lucro <span class="muted">(%)</span></label>
-                            <div class="row"><input id="shared_margem_lucro" value="15" type="text" inputmode="decimal"
-                                    placeholder="0" /><span class="sufix">%</span></div>
+                            <div class="row">
+                                <button id="margem_lucro_link_toggle" type="button" class="margem-link-toggle"
+                                    title="Sincronização de margem desativada"
+                                    aria-label="Sincronização de margem desativada" aria-pressed="false"><i
+                                        class="fa-solid fa-link-slash" aria-hidden="true"></i>
+                                </button>
+                                <input id="shared_margem_lucro" value="15" type="text" inputmode="decimal"
+                                    placeholder="0" /> <span class="sufix">%</span>
+                            </div>
                         </div>
                         <div>
                             <label>DAS Simples <span class="muted">(%)</span></label>
@@ -71,7 +78,8 @@
                             <!-- -----------------------MERCADO LIVRE----------------------- -->
                             <div class="market-card-header">
                                 <h1 id="ml">Mercado Livre</h1>
-                                <button type="button" class="toggle-market-card-btn" data-market="ml" aria-pressed="false">Expandir</button>
+                                <button type="button" class="toggle-market-card-btn" data-market="ml"
+                                    aria-pressed="false">Expandir</button>
                             </div>
                             <div class="variant-grid mt-8">
                                 <div class="variant-card">
@@ -81,7 +89,10 @@
                                             <div class="result-secondary">Preço sugerido</div>
                                             <div class="pv-row pv-row-value-only">
                                                 <div id="pv_ml_classico" class="result-main">R$ 0,00</div>
-                                                <button type="button" class="copy-pv-icon-btn" data-pv-target="pv_ml_classico" title="Copiar apenas valor do PV" aria-label="Copiar apenas valor do PV"><i class="fa-regular fa-copy" aria-hidden="true"></i></button>
+                                                <button type="button" class="copy-pv-icon-btn"
+                                                    data-pv-target="pv_ml_classico" title="Copiar apenas valor do PV"
+                                                    aria-label="Copiar apenas valor do PV"><i class="fa-regular fa-copy"
+                                                        aria-hidden="true"></i></button>
                                             </div>
                                         </div>
                                         <div class="text-right min-w-220">
@@ -120,7 +131,10 @@
                                             <div class="result-secondary">Preço sugerido</div>
                                             <div class="pv-row pv-row-value-only">
                                                 <div id="pv_ml_premium" class="result-main">R$ 0,00</div>
-                                                <button type="button" class="copy-pv-icon-btn" data-pv-target="pv_ml_premium" title="Copiar apenas valor do PV" aria-label="Copiar apenas valor do PV"><i class="fa-regular fa-copy" aria-hidden="true"></i></button>
+                                                <button type="button" class="copy-pv-icon-btn"
+                                                    data-pv-target="pv_ml_premium" title="Copiar apenas valor do PV"
+                                                    aria-label="Copiar apenas valor do PV"><i class="fa-regular fa-copy"
+                                                        aria-hidden="true"></i></button>
                                             </div>
                                         </div>
                                         <div class="text-right min-w-220">
@@ -163,9 +177,9 @@
                                             placeholder="0,00" /></div>
                                 </div>
                                 <div>
-                                    <label>Margem de lucro desejada <span class="muted"> (auto %)</span></label>
-                                    <div class="row"><input id="margem_lucro_ml" type="text" readonly
-                                            inputmode="decimal" placeholder="0" /><span class="sufix">%</span></div>
+                                    <label>Margem de lucro desejada <span class="muted"> (%)</span></label>
+                                    <div class="row"><input id="margem_lucro_ml" type="text" inputmode="decimal"
+                                            placeholder="0" /><span class="sufix">%</span></div>
                                 </div>
                             </div>
 
@@ -209,15 +223,19 @@
                         <div class="market-card shopee">
                             <div class="market-card-header">
                                 <h1 id="shopee">Shopee</h1>
-                                <button type="button" class="toggle-market-card-btn" data-market="shopee" aria-pressed="false">Expandir</button>
+                                <button type="button" class="toggle-market-card-btn" data-market="shopee"
+                                    aria-pressed="false">Expandir</button>
                             </div>
                             <div class="result mt-12">
                                 <div>
-                                    <div class="result-secondary">PV sugerido</div> 
+                                    <div class="result-secondary">PV sugerido</div>
                                     <div class="pv-row">
                                         <div id="pv_shopee" class="result-main">R$ 0,00</div>
-                                        <button type="button" class="copy-pv-icon-btn" data-pv-target="pv_shopee" title="Copiar apenas valor do PV" aria-label="Copiar apenas valor do PV"><i class="fa-regular fa-copy" aria-hidden="true"></i></button>
-                                        <button id="copyBtn_shopee" class="primary" type="button">Copiar para Excel</button>
+                                        <button type="button" class="copy-pv-icon-btn" data-pv-target="pv_shopee"
+                                            title="Copiar apenas valor do PV" aria-label="Copiar apenas valor do PV"><i
+                                                class="fa-regular fa-copy" aria-hidden="true"></i></button>
+                                        <button id="copyBtn_shopee" class="primary" type="button">Copiar para
+                                            Excel</button>
                                     </div>
                                 </div>
                             </div>
@@ -248,9 +266,9 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <label>Margem de lucro <span class="muted"> (auto %)</span></label>
-                                    <div class="row"><input id="margem_lucro_shopee" type="text" readonly
-                                            inputmode="decimal" placeholder="0" /><span class="sufix">%</span></div>
+                                    <label>Margem de lucro <span class="muted"> (%)</span></label>
+                                    <div class="row"><input id="margem_lucro_shopee" type="text" inputmode="decimal"
+                                            placeholder="0" /><span class="sufix">%</span></div>
                                 </div>
                             </div>
 
@@ -291,22 +309,26 @@
                             <!-- -----------------------MAGALU----------------------- -->
                             <div class="market-card-header">
                                 <h1 id="magalu">Magalu</h1>
-                                <button type="button" class="toggle-market-card-btn" data-market="magalu" aria-pressed="false">Expandir</button>
+                                <button type="button" class="toggle-market-card-btn" data-market="magalu"
+                                    aria-pressed="false">Expandir</button>
                             </div>
                             <div class="result mt-12">
                                 <div>
                                     <div class="result-secondary">PV sugerido</div>
                                     <div class="pv-row">
                                         <div id="pv_magalu" class="result-main">R$ 0,00</div>
-                                        <button type="button" class="copy-pv-icon-btn" data-pv-target="pv_magalu" title="Copiar apenas valor do PV" aria-label="Copiar apenas valor do PV"><i class="fa-regular fa-copy" aria-hidden="true"></i></button>
-                                        <button id="copyBtn_magalu" class="primary" type="button">Copiar para Excel</button>
+                                        <button type="button" class="copy-pv-icon-btn" data-pv-target="pv_magalu"
+                                            title="Copiar apenas valor do PV" aria-label="Copiar apenas valor do PV"><i
+                                                class="fa-regular fa-copy" aria-hidden="true"></i></button>
+                                        <button id="copyBtn_magalu" class="primary" type="button">Copiar para
+                                            Excel</button>
                                     </div>
                                 </div>
                             </div>
                             <div class="btns items-end justify-end">
                             </div>
                             <div id="msg_magalu" class="danger mt-8 hidden"></div>
-                            
+
                             <div class="grid">
                                 <div>
                                     <label>Custo do produto <span class="muted"> (auto R$)</span></label>
@@ -334,9 +356,9 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <label>Margem de lucro <span class="muted"> (auto %)</span></label>
-                                    <div class="row"><input id="margem_lucro_magalu" type="text" readonly
-                                            inputmode="decimal" placeholder="0" /><span class="sufix">%</span></div>
+                                    <label>Margem de lucro <span class="muted"> (%)</span></label>
+                                    <div class="row"><input id="margem_lucro_magalu" type="text" inputmode="decimal"
+                                            placeholder="0" /><span class="sufix">%</span></div>
                                 </div>
                                 <div>
                                     <label>Comissão <span class="muted"> (auto %)</span></label>

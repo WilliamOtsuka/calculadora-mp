@@ -14,6 +14,7 @@ const SHARED_FIELDS = ['custo', 'embalagem', 'margem_lucro', 'das', 'descontos',
 const ZERO_CURRENCY = 'R$ 0,00';
 const MAGALU_COMISSAO = 0.148;
 const MAGALU_FRETE_GRATIS_THRESHOLD = 79;
+let isMargemLucroLinked = false;
 
 const PV_ALERT_TARGETS = {
   ml: [
@@ -939,8 +940,11 @@ function recalcAll() {
   }
 }
 
-function syncSharedValue(field, value) {
+function syncSharedValue(field, value, options = {}) {
+  const force = Boolean(options.force);
+
   for (const prefix of MARKETPLACES) {
+    if (field === 'margem_lucro' && !isMargemLucroLinked && !force) continue;
     const target = byId(`${field}_${prefix}`);
     if (target) target.value = value;
   }
@@ -970,6 +974,54 @@ function formatFieldOnBlur(element, field, prefix) {
   }
 
   element.value = value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function setMargemLucroFieldsReadonly(readonly) {
+  for (const prefix of MARKETPLACES) {
+    const input = byId(`margem_lucro_${prefix}`);
+    if (input) input.readOnly = readonly;
+  }
+}
+
+function updateMargemLucroToggleButton(linked) {
+  const button = byId('margem_lucro_link_toggle');
+  if (!button) return;
+
+  button.classList.toggle('is-linked', linked);
+  button.setAttribute('aria-pressed', linked ? 'true' : 'false');
+
+  const label = linked
+    ? 'Sincronização de margem ativada'
+    : 'Sincronização de margem desativada';
+  button.title = label;
+  button.setAttribute('aria-label', label);
+  button.innerHTML = linked
+    ? '<i class="fa-solid fa-link" aria-hidden="true"></i>'
+    : '<i class="fa-solid fa-link-slash" aria-hidden="true"></i>';
+}
+
+function setMargemLucroLinkState(linked, shouldRecalc = true) {
+  isMargemLucroLinked = Boolean(linked);
+  setMargemLucroFieldsReadonly(isMargemLucroLinked);
+  updateMargemLucroToggleButton(isMargemLucroLinked);
+
+  if (isMargemLucroLinked) {
+    const sharedMargemLucro = byId('shared_margem_lucro');
+    syncSharedValue('margem_lucro', sharedMargemLucro ? sharedMargemLucro.value : '', { force: true });
+  }
+
+  if (shouldRecalc) {
+    recalcAll();
+  }
+}
+
+function bindMargemLucroLinkToggle() {
+  const button = byId('margem_lucro_link_toggle');
+  if (!button) return;
+
+  button.addEventListener('click', () => {
+    setMargemLucroLinkState(!isMargemLucroLinked, true);
+  });
 }
 
 function bindSharedFields() {
@@ -1007,7 +1059,7 @@ function syncInitialSharedValues() {
   for (const field of SHARED_FIELDS) {
     const shared = byId(`shared_${field}`);
     if (!shared) continue;
-    syncSharedValue(field, shared.value);
+    syncSharedValue(field, shared.value, { force: true });
   }
 }
 
@@ -1035,6 +1087,10 @@ function resetNonFixedValuesOnReload() {
   setValue('sla_envio_magalu', '0.5');
 
   syncInitialSharedValues();
+
+  // Com vínculo desligado por padrão, cada marketplace pode iniciar com margem própria.
+  setValue('margem_lucro_shopee', '15');
+  setValue('margem_lucro_magalu', '20');
 }
 
 function formatDimensionValue(value) {
@@ -1714,7 +1770,9 @@ function init() {
 
   initPvMissingAlerts();
   resetNonFixedValuesOnReload();
+  setMargemLucroLinkState(false, false);
   bindSharedFields();
+  bindMargemLucroLinkToggle();
   bindSkuLookup();
   bindCopyPvValueButtons();
   bindShopeeModal();

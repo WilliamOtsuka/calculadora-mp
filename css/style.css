@@ -403,6 +403,27 @@ button#resetBtn_all:active {
   filter: brightness(0.96);
 }
 
+.margem-link-toggle {
+  width: 45px;
+  height: 36px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: #a8b6cf;
+}
+
+.margem-link-toggle i {
+  font-size: 0.95rem;
+}
+
+.margem-link-toggle.is-linked {
+  border-color: #22c55e66;
+  background: #22c55e1a;
+  color: var(--accent);
+}
+
 /* Utility spacing */
 .mt-0 {
   margin-top: 0 !important;
