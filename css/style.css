@@ -334,6 +334,7 @@ td:first-child {
 
 .danger {
   color: var(--danger);
+  font-size: 0.9rem;
 }
 
 .info {
@@ -396,6 +397,35 @@ button#resetBtn_all:hover {
   background: rgba(255, 0, 0, 0.2);
   color: #ef4444;
   border-color: #ef4444;
+}
+
+/* Toast used for copy feedback */
+.copy-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.96);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  z-index: 99999;
+  opacity: 0;
+  animation: copyToastIn 300ms ease-out forwards;
+  transition: opacity 140ms ease;
+}
+
+@keyframes copyToastIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 button#resetBtn_all:active {
@@ -908,4 +938,21 @@ button#resetBtn_all:active {
   padding: 6px 8px;
   font-size: 0.85rem;
   margin: 10px 0 0;
+}
+
+.copy-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.96);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  z-index: 99999;
+  opacity: 0;
+  animation: copyToastIn 300ms ease-out forwards;
+  transition: opacity 140ms ease;
 }
