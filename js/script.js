@@ -201,6 +201,10 @@ function getMarketplaceFields(prefix) {
 function parseDecimal(value) {
   if (value === null || value === undefined) return 0;
 
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : 0;
+  }
+
   let normalized = typeof value === 'string' ? value : String(value);
   normalized = normalized.replace(/R\$\s?/gi, '');
   normalized = normalized.replace(/\s+/g, '').replace(/\./g, '').replace(',', '.');
@@ -1206,7 +1210,7 @@ function bindSharedFields() {
 }
 
 function applyCostToMarketplaces(value) {
-  const clampedValue = clampNumberToMax(parseDecimal(value));
+  const clampedValue = clampNumberToMax(parseTinyNumericValue(value));
   const formatted = fmtBRL.format(clampedValue);
   const sharedCost = byId('shared_custo');
   if (sharedCost) sharedCost.value = formatted;
