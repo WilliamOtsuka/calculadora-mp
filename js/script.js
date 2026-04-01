@@ -259,6 +259,17 @@ function sanitizeAndClampNumberString(value, maxDecimals = 2) {
   const clean = sanitizeNumberString(value, maxDecimals);
   if (!clean) return '';
 
+  // Preserve a trailing comma while typing (e.g. "1,") so decimal input remains natural.
+  if (clean.endsWith(',')) {
+    const integerPart = clean.slice(0, -1);
+    const numeric = parseDecimal(integerPart);
+    const clamped = clampNumberToMax(numeric);
+    const formattedInteger = clamped.toLocaleString('pt-BR', {
+      maximumFractionDigits: 0
+    });
+    return `${formattedInteger},`;
+  }
+
   const numeric = parseDecimal(clean);
   const clamped = clampNumberToMax(numeric);
   const decimalCount = clean.includes(',') ? Math.min((clean.split(',')[1] || '').length, maxDecimals) : 0;
