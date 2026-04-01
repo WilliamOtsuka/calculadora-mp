@@ -111,6 +111,13 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <div>
+                                        <label>Frete<span class="muted"> (R$)</span></label>
+                                        <div class="row">
+                                            <input id="frete_ml_classico" class="auto-field" type="text" readonly
+                                                title="Campo calculado automaticamente" />
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="variant-card">
                                     <h4 class="mt-0">Premium</h4>
@@ -124,7 +131,7 @@
                                                     aria-label="Copiar apenas valor do PV"><i class="fa-regular fa-copy"
                                                         aria-hidden="true"></i></button>
                                             </div>
-                                        </div>  
+                                        </div>
                                     </div>
                                     <div class="grid">
                                         <div>
@@ -138,6 +145,13 @@
                                             <div class="row"><input id="total_taxas_ml_premium" class="auto-field"
                                                     type="text" readonly title="Campo calculado automaticamente" />
                                             </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label>Frete<span class="muted"> (R$)</span></label>
+                                        <div class="row">
+                                            <input id="frete_ml_premium" class="auto-field" type="text" readonly
+                                                title="Campo calculado automaticamente" />
                                         </div>
                                     </div>
                                 </div>
@@ -154,13 +168,19 @@
                                             placeholder="0" /><span class="sufix">%</span></div>
                                 </div>
                                 <div>
-                                    <label>Frete <span class="muted">(R$)</span></label>
-                                    <div class="row"><input id="custos_adic_ml" type="text" inputmode="decimal"
-                                            placeholder="0,00" /></div>
+                                    <label>Frete<span class="muted"> (R$)</span></label>
+                                    <div class="row">
+                                        <button id="frete_link_toggle" type="button" class="frete-link-toggle"
+                                            title="Sincronização de frete desativada"
+                                            aria-label="Sincronização de frete desativada" aria-pressed="false"><i
+                                                class="fa-solid fa-link-slash" aria-hidden="true"></i>
+                                        </button>
+                                        <input id="shared_frete_ml" value="15" type="text" inputmode="decimal"
+                                            placeholder="0,00" />
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- checkbox removido daqui; será adicionado na seção Shopee -->
                             <div class="grid mt-8">
                                 <div>
                                     <label>Categoria</label>
@@ -185,16 +205,16 @@
                                 </div>
                                 <div>
                                     <label>ADS <span class="muted">(%)</span></label>
-                                    <div class="row"><input id="ads_ml" class="auto-field" type="text" 
+                                    <div class="row"><input id="ads_ml" class="auto-field" type="text"
                                             inputmode="decimal" placeholder="0" /><span class="sufix">%</span></div>
                                 </div>
                                 <div>
                                     <label>Margem p/ descontos <span class="muted">(%)</span></label>
-                                    <div class="row"><input id="descontos_ml" class="auto-field" type="text" 
+                                    <div class="row"><input id="descontos_ml" class="auto-field" type="text"
                                             inputmode="decimal" placeholder="0" /><span class="sufix">%</span></div>
                                 </div>
                             </div>
-                            
+
                         </div>
                         <!-- -----------------------SHOPEE----------------------- -->
                         <div class="market-card shopee">
@@ -341,8 +361,8 @@
                                 </div>
                                 <div>
                                     <label>Comissão <span class="muted"> (auto %)</span></label>
-                                    <div class="row"><input id="comissao_magalu" type="text" readonly inputmode="decimal"
-                                            placeholder="0" /><span class="sufix">%</span></div>
+                                    <div class="row"><input id="comissao_magalu" type="text" readonly
+                                            inputmode="decimal" placeholder="0" /><span class="sufix">%</span></div>
                                 </div>
                             </div>
                             <div class="grid mt-8">

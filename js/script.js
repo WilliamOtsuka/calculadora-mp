@@ -19,6 +19,7 @@ const ML_ADS_TAXA = 0.05;
 const MAGALU_COMISSAO = 0.148;
 const MAGALU_FRETE_GRATIS_THRESHOLD = 79;
 let isMargemLucroLinked = false;
+let isFreteMlLinked = false;
 
 const PV_ALERT_TARGETS = {
   ml: [
@@ -34,7 +35,7 @@ const PV_ALERT_REQUIRED_FIELDS = {
     { id: 'shared_custo', label: 'Custo do produto' },
     { id: 'shared_embalagem', label: 'Custo da embalagem' },
     { id: 'shared_margem_lucro', label: 'Margem de lucro' },
-    { id: 'custos_adic_ml', label: 'Frete' }
+    { id: 'shared_frete_ml', label: 'Frete' }
   ],
   shopee: [
     { id: 'shared_custo', label: 'Custo do produto' },
@@ -742,7 +743,8 @@ function recalcMercadoLivre() {
   const custo = getMoneyField('custo', 'ml');
   const embalagem = getMoneyField('embalagem', 'ml');
   const margemLucro = getPercentField('margem_lucro', 'ml');
-  const frete = getMoneyField('custos_adic', 'ml');
+  const freteClassico = parseDecimal(byId('frete_ml_classico')?.value || 0);
+  const fretePremium = parseDecimal(byId('frete_ml_premium')?.value || 0);
 
   const impostosEl = byId('impostos_ml');
   if (impostosEl) {
@@ -752,8 +754,8 @@ function recalcMercadoLivre() {
 
   showMessage('ml');
 
-  const classico = computeMlOffer({ custo, embalagem, margemLucro, frete, tipo: 'classico' });
-  const premium = computeMlOffer({ custo, embalagem, margemLucro, frete, tipo: 'premium' });
+  const classico = computeMlOffer({ custo, embalagem, margemLucro, frete: freteClassico, tipo: 'classico' });
+  const premium = computeMlOffer({ custo, embalagem, margemLucro, frete: fretePremium, tipo: 'premium' });
 
   fillMlOffer('classico', classico);
   fillMlOffer('premium', premium);
@@ -998,6 +1000,13 @@ function setMargemLucroFieldsReadonly(readonly) {
   }
 }
 
+function setMlFreteFieldsReadonly(readonly) {
+  ['classico', 'premium'].forEach((tipo) => {
+    const input = byId(`frete_ml_${tipo}`);
+    if (input) input.readOnly = readonly;
+  });
+}
+
 function updateMargemLucroToggleButton(linked) {
   const button = byId('margem_lucro_link_toggle');
   if (!button) return;
@@ -1038,6 +1047,117 @@ function bindMargemLucroLinkToggle() {
 
   button.addEventListener('click', () => {
     setMargemLucroLinkState(!isMargemLucroLinked, true);
+  });
+}
+
+function updateFreteMlToggleButton(linked) {
+  const button = byId('frete_link_toggle');
+  if (!button) return;
+
+  button.classList.toggle('is-linked', linked);
+  button.setAttribute('aria-pressed', linked ? 'true' : 'false');
+
+  const label = linked
+    ? 'Sincronizacao de frete ativada'
+    : 'Sincronizacao de frete desativada';
+  button.title = label;
+  button.setAttribute('aria-label', label);
+  button.innerHTML = linked
+    ? '<i class="fa-solid fa-link" aria-hidden="true"></i>'
+    : '<i class="fa-solid fa-link-slash" aria-hidden="true"></i>';
+}
+
+function syncSharedFreteMlToOffers() {
+  const sharedFrete = byId('shared_frete_ml');
+  const value = sharedFrete ? sharedFrete.value : '';
+
+  ['classico', 'premium'].forEach((tipo) => {
+    const input = byId(`frete_ml_${tipo}`);
+    if (input) input.value = value;
+  });
+}
+
+function setFreteMlLinkState(linked, shouldRecalc = true) {
+  isFreteMlLinked = Boolean(linked);
+
+  setMlFreteFieldsReadonly(isFreteMlLinked);
+  const sharedInput = byId('shared_frete_ml');
+  if (sharedInput) sharedInput.readOnly = !isFreteMlLinked;
+
+  updateFreteMlToggleButton(isFreteMlLinked);
+
+  if (isFreteMlLinked) {
+    syncSharedFreteMlToOffers();
+  }
+
+  if (shouldRecalc) {
+    recalc('ml');
+  }
+}
+
+function bindFreteMlLinkToggle() {
+  const button = byId('frete_link_toggle');
+  if (!button) return;
+
+  button.addEventListener('click', () => {
+    setFreteMlLinkState(!isFreteMlLinked, true);
+  });
+}
+
+function bindMlFreteFields() {
+  const sharedFrete = byId('shared_frete_ml');
+  const freteClassico = byId('frete_ml_classico');
+  const fretePremium = byId('frete_ml_premium');
+  const freteInputs = [sharedFrete, freteClassico, fretePremium].filter(Boolean);
+
+  freteInputs.forEach((input) => {
+    input.addEventListener('keypress', (event) => {
+      if (event.key?.length === 1 && !/[0-9.,]/.test(event.key)) {
+        event.preventDefault();
+      }
+    });
+  });
+
+  if (sharedFrete) {
+    sharedFrete.addEventListener('input', () => {
+      const clean = sanitizeNumberString(sharedFrete.value, 2);
+      if (sharedFrete.value !== clean) sharedFrete.value = clean;
+
+      if (isFreteMlLinked) {
+        syncSharedFreteMlToOffers();
+      }
+
+      recalc('ml');
+    });
+
+    sharedFrete.addEventListener('blur', () => {
+      const value = parseDecimal(sharedFrete.value);
+      sharedFrete.value = fmtBRL.format(value);
+
+      if (isFreteMlLinked) {
+        syncSharedFreteMlToOffers();
+        const classicoInput = byId('frete_ml_classico');
+        const premiumInput = byId('frete_ml_premium');
+        if (classicoInput) classicoInput.value = fmtBRL.format(value);
+        if (premiumInput) premiumInput.value = fmtBRL.format(value);
+      }
+
+      recalc('ml');
+    });
+  }
+
+  [freteClassico, fretePremium].filter(Boolean).forEach((input) => {
+    input.addEventListener('input', () => {
+      const clean = sanitizeNumberString(input.value, 2);
+      if (input.value !== clean) input.value = clean;
+      recalc('ml');
+    });
+
+    input.addEventListener('blur', () => {
+      const value = parseDecimal(input.value);
+      input.value = fmtBRL.format(value);
+      recalc('ml');
+    });
   });
 }
 
@@ -1158,6 +1278,7 @@ function createSuggestionController({ skuInput, nomeInput, onSelect }) {
   let suggestions = [];
   let selectedIndex = -1;
   let focusedInput = skuInput || nomeInput || null;
+  let suppressSuggestions = false;
 
   function createBox() {
     if (suggestBox) return suggestBox;
@@ -1189,6 +1310,11 @@ function createSuggestionController({ skuInput, nomeInput, onSelect }) {
     suggestBox = null;
   }
 
+  function suppress() {
+    suppressSuggestions = true;
+    clear();
+  }
+
   function highlight(index) {
     if (!suggestBox) return;
 
@@ -1207,6 +1333,11 @@ function createSuggestionController({ skuInput, nomeInput, onSelect }) {
   }
 
   function render(items) {
+    if (suppressSuggestions) {
+      clear();
+      return;
+    }
+
     createBox();
     positionBox();
     suggestions = items || [];
@@ -1227,6 +1358,11 @@ function createSuggestionController({ skuInput, nomeInput, onSelect }) {
   const search = debounce(async () => {
     const source = focusedInput || skuInput || nomeInput;
     if (!source) return;
+
+    if (suppressSuggestions) {
+      clear();
+      return;
+    }
 
     const query = source.value.trim();
     if (query.length < 2) {
@@ -1256,6 +1392,7 @@ function createSuggestionController({ skuInput, nomeInput, onSelect }) {
 
     input.addEventListener('input', () => {
       focusedInput = input;
+      suppressSuggestions = false;
       search();
     });
 
@@ -1280,6 +1417,11 @@ function createSuggestionController({ skuInput, nomeInput, onSelect }) {
         return;
       }
 
+      if (event.key === 'Enter') {
+        suppress();
+        return;
+      }
+
       if (event.key === 'Escape') clear();
     });
   }
@@ -1291,6 +1433,10 @@ function createSuggestionController({ skuInput, nomeInput, onSelect }) {
     if (event.target.closest('.sku-suggestions')) return;
     clear();
   });
+
+  return {
+    suppress
+  };
 }
 
 function bindSkuLookup() {
@@ -1298,6 +1444,7 @@ function bindSkuLookup() {
   const nomeInput = byId('tiny_nome');
   const button = byId('buscar_sku_btn');
   const message = byId('sku_msg');
+  let suggestionController = null;
 
   async function buscarPorSku(skuArg) {
     const currentSku = (skuArg || skuInput?.value.trim() || '').trim();
@@ -1370,11 +1517,17 @@ function bindSkuLookup() {
     }
   }
 
-  if (button) button.addEventListener('click', () => buscarPorSku());
+  if (button) {
+    button.addEventListener('click', () => {
+      if (suggestionController) suggestionController.suppress();
+      buscarPorSku();
+    });
+  }
   if (skuInput) {
     skuInput.addEventListener('keydown', (event) => {
       if (event.key !== 'Enter') return;
       event.preventDefault();
+      if (suggestionController) suggestionController.suppress();
       buscarPorSku();
     });
   }
@@ -1382,12 +1535,13 @@ function bindSkuLookup() {
     nomeInput.addEventListener('keydown', (event) => {
       if (event.key !== 'Enter') return;
       event.preventDefault();
+      if (suggestionController) suggestionController.suppress();
       buscarPorSku();
     });
   }
 
   if (skuInput || nomeInput) {
-    createSuggestionController({ skuInput, nomeInput, onSelect: buscarPorSku });
+    suggestionController = createSuggestionController({ skuInput, nomeInput, onSelect: buscarPorSku });
   }
 }
 
@@ -1825,8 +1979,11 @@ function init() {
   initPvMissingAlerts();
   resetNonFixedValuesOnReload();
   setMargemLucroLinkState(false, false);
+  setFreteMlLinkState(false, false);
   bindSharedFields();
   bindMargemLucroLinkToggle();
+  bindMlFreteFields();
+  bindFreteMlLinkToggle();
   bindSkuLookup();
   bindCopyPvValueButtons();
   bindShopeeModal();
