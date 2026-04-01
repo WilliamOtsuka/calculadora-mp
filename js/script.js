@@ -18,6 +18,7 @@ const ML_IMPOSTO_SIMPLES = 0.09;
 const ML_ADS_TAXA = 0.05;
 const MAGALU_COMISSAO = 0.148;
 const MAGALU_FRETE_GRATIS_THRESHOLD = 79;
+const MAX_NUMERIC_INPUT_VALUE = 10000;
 let isMargemLucroLinked = false;
 let isFreteMlLinked = false;
 
@@ -242,6 +243,26 @@ function sanitizeNumberString(value, maxDecimals = 2) {
   }
 
   return output;
+}
+
+function clampNumberToMax(value, max = MAX_NUMERIC_INPUT_VALUE) {
+  if (!Number.isFinite(value)) return 0;
+  if (value < 0) return 0;
+  return Math.min(value, max);
+}
+
+function sanitizeAndClampNumberString(value, maxDecimals = 2) {
+  const clean = sanitizeNumberString(value, maxDecimals);
+  if (!clean) return '';
+
+  const numeric = parseDecimal(clean);
+  const clamped = clampNumberToMax(numeric);
+  const decimalCount = clean.includes(',') ? Math.min((clean.split(',')[1] || '').length, maxDecimals) : 0;
+
+  return clamped.toLocaleString('pt-BR', {
+    minimumFractionDigits: decimalCount,
+    maximumFractionDigits: maxDecimals
+  });
 }
 
 function formatNumber(value, decimals = 2) {
@@ -978,7 +999,7 @@ function isNumericField(field, prefix) {
 }
 
 function formatFieldOnBlur(element, field, prefix) {
-  const value = parseDecimal(element.value);
+  const value = clampNumberToMax(parseDecimal(element.value));
 
   if (PERCENT_FIELDS.includes(field) || (prefix === 'ml' && field === 'impostos')) {
     element.value = value.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
@@ -1120,7 +1141,7 @@ function bindMlFreteFields() {
 
   if (sharedFrete) {
     sharedFrete.addEventListener('input', () => {
-      const clean = sanitizeNumberString(sharedFrete.value, 2);
+      const clean = sanitizeAndClampNumberString(sharedFrete.value, 2);
       if (sharedFrete.value !== clean) sharedFrete.value = clean;
 
       if (isFreteMlLinked) {
@@ -1131,7 +1152,7 @@ function bindMlFreteFields() {
     });
 
     sharedFrete.addEventListener('blur', () => {
-      const value = parseDecimal(sharedFrete.value);
+      const value = clampNumberToMax(parseDecimal(sharedFrete.value));
       sharedFrete.value = fmtBRL.format(value);
 
       if (isFreteMlLinked) {
@@ -1148,13 +1169,13 @@ function bindMlFreteFields() {
 
   [freteClassico, fretePremium].filter(Boolean).forEach((input) => {
     input.addEventListener('input', () => {
-      const clean = sanitizeNumberString(input.value, 2);
+      const clean = sanitizeAndClampNumberString(input.value, 2);
       if (input.value !== clean) input.value = clean;
       recalc('ml');
     });
 
     input.addEventListener('blur', () => {
-      const value = parseDecimal(input.value);
+      const value = clampNumberToMax(parseDecimal(input.value));
       input.value = fmtBRL.format(value);
       recalc('ml');
     });
@@ -1167,14 +1188,14 @@ function bindSharedFields() {
     if (!element) continue;
 
     element.addEventListener('input', () => {
-      const clean = sanitizeNumberString(element.value, 2);
+      const clean = sanitizeAndClampNumberString(element.value, 2);
       if (element.value !== clean) element.value = clean;
       syncSharedValue(field, element.value);
       recalcAll();
     });
 
     element.addEventListener('blur', () => {
-      const value = parseDecimal(element.value);
+      const value = clampNumberToMax(parseDecimal(element.value));
       element.value = PERCENT_FIELDS.includes(field)
         ? value.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
         : fmtBRL.format(value);
@@ -1185,7 +1206,8 @@ function bindSharedFields() {
 }
 
 function applyCostToMarketplaces(value) {
-  const formatted = fmtBRL.format(value);
+  const clampedValue = clampNumberToMax(parseDecimal(value));
+  const formatted = fmtBRL.format(clampedValue);
   const sharedCost = byId('shared_custo');
   if (sharedCost) sharedCost.value = formatted;
   syncSharedValue('custo', formatted);
@@ -1663,7 +1685,7 @@ function bindMarketplaceFields(prefix) {
 
     element.addEventListener('input', () => {
       if (element.tagName !== 'SELECT' && isNumericField(field, prefix)) {
-        const clean = sanitizeNumberString(element.value, 2);
+        const clean = sanitizeAndClampNumberString(element.value, 2);
         if (element.value !== clean) element.value = clean;
       }
       recalc(prefix);

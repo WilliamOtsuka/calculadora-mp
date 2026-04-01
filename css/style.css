@@ -256,7 +256,7 @@ input:focus {
 
 .row input[type="number"],
 .row input[type="text"] {
-  flex: 1 1 auto;
+  flex: 1 1 0%;
   min-width: 0;
   max-width: 100%;
 }
