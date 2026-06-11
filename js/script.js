@@ -18,7 +18,6 @@ const ML_IMPOSTO_SIMPLES = 0.09;
 const ML_ADS_TAXA = 0.05;
 const MAGALU_COMISSAO = 0.148;
 const MAGALU_FRETE_GRATIS_THRESHOLD = 79;
-const MAX_NUMERIC_INPUT_VALUE = 10000;
 let isMargemLucroLinked = false;
 let isFreteMlLinked = false;
 
@@ -62,34 +61,66 @@ const PV_ALERT_REQUIRED_FIELDS = {
 };
 
 const MAGALU_FREIGHT_TABLE = [
-  { max: 0.5,   base: 35.90 },
-  { max: 1,     base: 40.90 },
-  { max: 2,     base: 42.90 },
-  { max: 5,     base: 50.90 },
-  { max: 9,     base: 77.90 },
-  { max: 13,    base: 98.90 },
-  { max: 17,    base: 111.90 },
-  { max: 23,    base: 134.90 },
-  { max: 30,    base: 148.90 },
-  { max: 40,    base: 159.90 },
-  { max: 50,    base: 189.90 },
-  { max: 60,    base: 197.90 },
-  { max: 70,    base: 206.90 },
-  { max: 80,    base: 215.90 },
-  { max: 90,    base: 225.90 },
-  { max: 100,   base: 235.90 },
-  { max: 110,   base: 245.90 },
-  { max: 120,   base: 256.90 },
-  { max: 130,   base: 267.90 },
-  { max: 140,   base: 279.90 },
-  { max: 150,   base: 291.90 },
-  { max: 160,   base: 304.90 },
-  { max: 170,   base: 317.90 },
-  { max: 180,   base: 331.90 },
-  { max: 190,   base: 345.90 },
-  { max: 200,   base: 360.90 },
+  { max: 0.5, base: 35.90 },
+  { max: 1, base: 40.90 },
+  { max: 2, base: 42.90 },
+  { max: 5, base: 50.90 },
+  { max: 9, base: 77.90 },
+  { max: 13, base: 98.90 },
+  { max: 17, base: 111.90 },
+  { max: 23, base: 134.90 },
+  { max: 30, base: 148.90 },
+  { max: 40, base: 159.90 },
+  { max: 50, base: 189.90 },
+  { max: 60, base: 197.90 },
+  { max: 70, base: 206.90 },
+  { max: 80, base: 215.90 },
+  { max: 90, base: 225.90 },
+  { max: 100, base: 235.90 },
+  { max: 110, base: 245.90 },
+  { max: 120, base: 256.90 },
+  { max: 130, base: 267.90 },
+  { max: 140, base: 279.90 },
+  { max: 150, base: 291.90 },
+  { max: 160, base: 304.90 },
+  { max: 170, base: 317.90 },
+  { max: 180, base: 331.90 },
+  { max: 190, base: 345.90 },
+  { max: 200, base: 360.90 },
   { max: Infinity, base: 375.90 }
 ];
+
+let apiStatusToastTimer = null;
+let apiStatusLastShownAt = 0;
+
+function showApiUnavailableToast(text = 'API do Tiny indisponivel no momento. Tente novamente em instantes.') {
+  const now = Date.now();
+  if (now - apiStatusLastShownAt < 3000) return;
+  apiStatusLastShownAt = now;
+
+  let toast = byId('api_status_toast_global');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.className = 'status-toast status-toast-error';
+    toast.id = 'api_status_toast_global';
+    document.body.appendChild(toast);
+  }
+
+  toast.textContent = text;
+  toast.style.animation = 'none';
+  toast.offsetHeight;
+  toast.style.animation = '';
+  toast.style.opacity = '1';
+
+  if (apiStatusToastTimer) {
+    clearTimeout(apiStatusToastTimer);
+  }
+
+  apiStatusToastTimer = setTimeout(() => {
+    toast.style.animation = 'none';
+    toast.style.opacity = '0';
+  }, 2800);
+}
 
 function getMagaluFreteBase(pesoKg) {
   const row = MAGALU_FREIGHT_TABLE.find(r => pesoKg <= r.max);
@@ -97,9 +128,9 @@ function getMagaluFreteBase(pesoKg) {
 }
 
 const SHOPEE_BRACKETS = [
-  { min: 0, max: 79.999999, com: 0.20, tf: 4 },
-  { min: 80, max: 99.999999, com: 0.14, tf: 16 },
-  { min: 100, max: 199.999999, com: 0.14, tf: 20 },
+  { min: 0, max: 79.999, com: 0.20, tf: 4 },
+  { min: 80, max: 99.999, com: 0.14, tf: 16 },
+  { min: 100, max: 199.999, com: 0.14, tf: 20 },
   { min: 200, max: Infinity, com: 0.14, tf: 26 }
 ];
 
@@ -109,7 +140,16 @@ function byId(id) {
 
 function setText(id, text) {
   const element = byId(id);
-  if (element) element.textContent = text;
+  if (!element) return;
+  element.textContent = text;
+
+  if (element.classList.contains('result-main')) {
+    if (text && text !== '—') {
+      element.setAttribute('title', text);
+    } else {
+      element.removeAttribute('title');
+    }
+  }
 }
 
 function setValue(id, value) {
@@ -249,10 +289,21 @@ function sanitizeNumberString(value, maxDecimals = 2) {
   return output;
 }
 
-function clampNumberToMax(value, max = MAX_NUMERIC_INPUT_VALUE) {
-  if (!Number.isFinite(value)) return 0;
-  if (value < 0) return 0;
-  return Math.min(value, max);
+function formatCurrencyTypingValue(value, decimals = 2) {
+  if (value == null) return '';
+
+  let digits = String(value).replace(/\D/g, '');
+  if (!digits) return '';
+
+  const divisor = 10 ** decimals;
+  let numeric = Number(digits) / divisor;
+  if (!Number.isFinite(numeric)) numeric = 0;
+
+  let formatted = numeric.toFixed(decimals);
+  formatted = formatted.replace('.', ',');
+  formatted = formatted.replace(/(\d)(\d{3})(\d{3}),/g, '$1.$2.$3,');
+  formatted = formatted.replace(/(\d)(\d{3}),/g, '$1.$2,');
+  return formatted;
 }
 
 function sanitizeAndClampNumberString(value, maxDecimals = 2) {
@@ -263,7 +314,7 @@ function sanitizeAndClampNumberString(value, maxDecimals = 2) {
   if (clean.endsWith(',')) {
     const integerPart = clean.slice(0, -1);
     const numeric = parseDecimal(integerPart);
-    const clamped = clampNumberToMax(numeric);
+    const clamped = Number.isFinite(numeric) ? Math.max(0, numeric) : 0;
     const formattedInteger = clamped.toLocaleString('pt-BR', {
       maximumFractionDigits: 0
     });
@@ -271,7 +322,7 @@ function sanitizeAndClampNumberString(value, maxDecimals = 2) {
   }
 
   const numeric = parseDecimal(clean);
-  const clamped = clampNumberToMax(numeric);
+  const clamped = Number.isFinite(numeric) ? Math.max(0, numeric) : 0;
   const decimalCount = clean.includes(',') ? Math.min((clean.split(',')[1] || '').length, maxDecimals) : 0;
 
   return clamped.toLocaleString('pt-BR', {
@@ -311,9 +362,6 @@ function getPercentField(name, prefix) {
   return parseDecimal(getFieldValue(name, prefix)) / 100;
 }
 
-function getNumberField(name, prefix) {
-  return parseDecimal(getFieldValue(name, prefix));
-}
 
 function saveState(prefix) {
   const state = {};
@@ -535,10 +583,10 @@ function computeMagaluResult() {
   const pOutras = getPercentField('outras', 'magalu');
   const pCom = MAGALU_COMISSAO;
 
-  const pesoReal = getNumberField('peso_real', 'magalu');
-  const altura = getNumberField('altura', 'magalu');
-  const largura = getNumberField('largura', 'magalu');
-  const comprimento = getNumberField('comprimento', 'magalu');
+  const pesoReal = parseDecimal(getFieldValue('peso_real', 'magalu'));
+  const altura = parseDecimal(getFieldValue('altura', 'magalu'));
+  const largura = parseDecimal(getFieldValue('largura', 'magalu'));
+  const comprimento = parseDecimal(getFieldValue('comprimento', 'magalu'));
   const freteBase = getMoneyField('frete_base', 'magalu');
   const descontoFrete = getMagaluFreightDiscount();
 
@@ -627,10 +675,10 @@ function recalcMagalu() {
     descontoEl.readOnly = true;
   }
 
-  const pesoReal = getNumberField('peso_real', 'magalu');
-  const altura = getNumberField('altura', 'magalu');
-  const largura = getNumberField('largura', 'magalu');
-  const comprimento = getNumberField('comprimento', 'magalu');
+  const pesoReal = parseDecimal(getFieldValue('peso_real', 'magalu'));
+  const altura = parseDecimal(getFieldValue('altura', 'magalu'));
+  const largura = parseDecimal(getFieldValue('largura', 'magalu'));
+  const comprimento = parseDecimal(getFieldValue('comprimento', 'magalu'));
   if (pesoReal > 0 || (altura > 0 && largura > 0 && comprimento > 0)) {
     const pesoCubado = (altura * largura * comprimento) / 6000;
     const pesoConsiderado = Math.max(pesoReal, pesoCubado);
@@ -643,7 +691,7 @@ function recalcMagalu() {
   }
 
   const result = computeMagaluResult();
-  setValue('total_taxas_magalu', formatNumber(result.totalTaxasPct, 3));
+  setValue('total_taxas_magalu', formatNumber(result.totalTaxasPct * 100, 3));
 
   if (result.invalido) {
     setText('pv_magalu', '—');
@@ -845,8 +893,8 @@ function computeShopeeResult() {
   const vDesc = pv * pDesc;
   const vSpike = pv * pSpike;
   const vMargemLucro = pv * margemLucro;
-  const totalTaxasValor = vCom + vMargemLucro + vDas + vDesc + vSpike + taxaFixa;
-  const lucro = pv - custo - totalTaxasValor;
+  const totalTaxasValor = vCom + vDas + vDesc + vSpike + taxaFixa;
+  const lucro = pv - custo - embalagem - totalTaxasValor;
   const margemEfetiva = pv > 0 ? lucro / pv : 0;
 
   let faixaIdx = SHOPEE_BRACKETS.findIndex((bracket) => pv >= bracket.min && pv < bracket.max);
@@ -855,6 +903,7 @@ function computeShopeeResult() {
   return {
     pv,
     custo,
+    embalagem,
     margemLucro,
     pDas,
     pDesc,
@@ -869,7 +918,7 @@ function computeShopeeResult() {
     totalTaxasValor,
     lucro,
     margemEfetiva,
-    totalTaxasPct: comissaoBase + pDas + pDesc + pSpike + margemLucro,
+    totalTaxasPct: comissaoBase + pDas + pDesc + pSpike,
     faixaIdx,
     lower: faixaIdx > 0 ? SHOPEE_BRACKETS[faixaIdx - 1] : null,
     higher: faixaIdx + 1 < SHOPEE_BRACKETS.length ? SHOPEE_BRACKETS[faixaIdx + 1] : null
@@ -883,7 +932,7 @@ function recalcShopee() {
   setText('pv_shopee', result.pv > 0 ? fmtBRL.format(result.pv) : '—');
   setValue('comissao_shopee', (result.comissaoBase * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 }));
   setValue('taxa_fixa_shopee', fmtBRL.format(result.taxaFixa));
-  setValue('total_taxas_shopee', result.totalTaxasPct.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 }));
+  setValue('total_taxas_shopee', formatNumber(result.totalTaxasPct * 100, 3));
 
   setText('det_comissao_shopee', fmtBRL.format(result.vCom));
   setText('det_das_shopee', fmtBRL.format(result.vDas));
@@ -899,6 +948,7 @@ function recalcShopee() {
     pv: result.pv,
     faixaIdx: result.faixaIdx,
     custo: result.custo,
+    embalagem: result.embalagem,
     margemLucro: result.margemLucro,
     pDas: result.pDas,
     pDesc: result.pDesc,
@@ -1014,7 +1064,8 @@ function isNumericField(field, prefix) {
 }
 
 function formatFieldOnBlur(element, field, prefix) {
-  const value = clampNumberToMax(parseDecimal(element.value));
+  const parsed = parseDecimal(element.value);
+  const value = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
 
   if (PERCENT_FIELDS.includes(field) || (prefix === 'ml' && field === 'impostos')) {
     element.value = value.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
@@ -1156,7 +1207,7 @@ function bindMlFreteFields() {
 
   if (sharedFrete) {
     sharedFrete.addEventListener('input', () => {
-      const clean = sanitizeAndClampNumberString(sharedFrete.value, 2);
+      const clean = formatCurrencyTypingValue(sharedFrete.value, 2);
       if (sharedFrete.value !== clean) sharedFrete.value = clean;
 
       if (isFreteMlLinked) {
@@ -1167,7 +1218,8 @@ function bindMlFreteFields() {
     });
 
     sharedFrete.addEventListener('blur', () => {
-      const value = clampNumberToMax(parseDecimal(sharedFrete.value));
+      const parsed = parseDecimal(sharedFrete.value);
+      const value = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
       sharedFrete.value = fmtBRL.format(value);
 
       if (isFreteMlLinked) {
@@ -1184,13 +1236,14 @@ function bindMlFreteFields() {
 
   [freteClassico, fretePremium].filter(Boolean).forEach((input) => {
     input.addEventListener('input', () => {
-      const clean = sanitizeAndClampNumberString(input.value, 2);
+      const clean = formatCurrencyTypingValue(input.value, 2);
       if (input.value !== clean) input.value = clean;
       recalc('ml');
     });
 
     input.addEventListener('blur', () => {
-      const value = clampNumberToMax(parseDecimal(input.value));
+      const parsed = parseDecimal(input.value);
+      const value = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
       input.value = fmtBRL.format(value);
       recalc('ml');
     });
@@ -1203,14 +1256,17 @@ function bindSharedFields() {
     if (!element) continue;
 
     element.addEventListener('input', () => {
-      const clean = sanitizeAndClampNumberString(element.value, 2);
+      const clean = PERCENT_FIELDS.includes(field)
+        ? sanitizeAndClampNumberString(element.value, 2)
+        : formatCurrencyTypingValue(element.value, 2);
       if (element.value !== clean) element.value = clean;
       syncSharedValue(field, element.value);
       recalcAll();
     });
 
     element.addEventListener('blur', () => {
-      const value = clampNumberToMax(parseDecimal(element.value));
+      const parsed = parseDecimal(element.value);
+      const value = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
       element.value = PERCENT_FIELDS.includes(field)
         ? value.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
         : fmtBRL.format(value);
@@ -1221,7 +1277,8 @@ function bindSharedFields() {
 }
 
 function applyCostToMarketplaces(value) {
-  const clampedValue = clampNumberToMax(parseTinyNumericValue(value));
+  const parsed = parseTinyNumericValue(value);
+  const clampedValue = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
   const formatted = fmtBRL.format(clampedValue);
   const sharedCost = byId('shared_custo');
   if (sharedCost) sharedCost.value = formatted;
@@ -1411,6 +1468,9 @@ function createSuggestionController({ skuInput, nomeInput, onSelect }) {
       const field = focusedInput === skuInput ? 'sku' : 'nome';
       const response = await fetch(`/search?q=${encodeURIComponent(query)}&field=${encodeURIComponent(field)}`);
       if (!response.ok) {
+        if (response.status === 503) {
+          showApiUnavailableToast();
+        }
         clear();
         return;
       }
@@ -1418,6 +1478,7 @@ function createSuggestionController({ skuInput, nomeInput, onSelect }) {
       const items = await response.json();
       render(items.slice(0, 10));
     } catch {
+      showApiUnavailableToast('Falha de conexao com a API.');
       clear();
     }
   }, 250);
@@ -1499,7 +1560,12 @@ function bindSkuLookup() {
 
         const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
         if (!response.ok) {
-          if (message) message.textContent = 'Erro na pesquisa por nome.';
+          if (response.status === 503) {
+            if (message) message.textContent = 'API do Tiny indisponivel no momento.';
+            showApiUnavailableToast();
+          } else if (message) {
+            message.textContent = 'Erro na pesquisa por nome.';
+          }
           return;
         }
 
@@ -1514,6 +1580,7 @@ function bindSkuLookup() {
         if (nomeInput) nomeInput.value = first.nome || '';
         await buscarPorSku(first.sku);
       } catch {
+        showApiUnavailableToast('Falha de conexao com a API.');
         if (message) message.textContent = 'Erro de rede.';
       } finally {
         if (button) button.disabled = false;
@@ -1528,7 +1595,14 @@ function bindSkuLookup() {
       const response = await fetch(`/preco-custo/${encodeURIComponent(currentSku)}`);
       if (!response.ok) {
         if (message) {
-          message.textContent = response.status === 404 ? 'SKU não encontrado.' : 'Erro ao buscar SKU.';
+          if (response.status === 404) {
+            message.textContent = 'SKU não encontrado.';
+          } else if (response.status === 503) {
+            message.textContent = 'API do Tiny indisponivel no momento.';
+            showApiUnavailableToast();
+          } else {
+            message.textContent = 'Erro ao buscar SKU.';
+          }
         }
         return;
       }
@@ -1544,10 +1618,19 @@ function bindSkuLookup() {
 
       applyCostToMarketplaces(data.preco_custo);
 
+      // Quando o produto é encontrado com sucesso, reinicia as margens de lucro
+      // para valores padrão: ML e Shopee 15%, Magalu 20%.
+      setValue('margem_lucro_ml', '15');
+      setValue('margem_lucro_shopee', '15');
+      setValue('margem_lucro_magalu', '20');
+      // Recalcula para aplicar as novas margens imediatamente.
+      recalcAll();
+
       if (message) {
-        message.textContent = `Preço preenchido. Nome: ${data.nome || '—'}`;
+        message.textContent = `Preço preenchido. Nome: ${data.nome || '—'} | Estoque: ${data.estoque !== undefined && data.estoque !== null ? data.estoque : '—'}`;
       }
     } catch {
+      showApiUnavailableToast('Falha de conexao com a API.');
       if (message) message.textContent = 'Erro de rede.';
     } finally {
       if (button) button.disabled = false;
@@ -1622,9 +1705,58 @@ function extractPvNumericValue(rawValue) {
 }
 
 let copyToastTimer = null;
+const copyButtonFeedbackTimers = new WeakMap();
 
 function bindCopyPvValueButtons() {
   const buttons = Array.from(document.querySelectorAll('.copy-pv-icon-btn'));
+
+  function triggerCopyHaptic(pattern) {
+    if (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') return;
+    try {
+      navigator.vibrate(pattern);
+    } catch {
+      // Ignore unsupported haptic feedback cases.
+    }
+  }
+
+  function restoreCopyButtonDefaultLabel(button) {
+    const baseLabel = button.dataset.baseCopyLabel || 'Copiar apenas valor do PV';
+    button.setAttribute('title', baseLabel);
+    button.setAttribute('aria-label', baseLabel);
+  }
+
+  function setCopyButtonFeedback(button, state, message, holdMs = 0) {
+    const existingTimer = copyButtonFeedbackTimers.get(button);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+      copyButtonFeedbackTimers.delete(button);
+    }
+
+    if (state) {
+      button.dataset.copyState = state;
+    } else {
+      delete button.dataset.copyState;
+    }
+
+    if (message) {
+      button.dataset.copyFeedback = message;
+      button.setAttribute('title', message);
+      button.setAttribute('aria-label', message);
+    } else {
+      delete button.dataset.copyFeedback;
+      restoreCopyButtonDefaultLabel(button);
+    }
+
+    if (holdMs > 0) {
+      const timer = setTimeout(() => {
+        delete button.dataset.copyState;
+        delete button.dataset.copyFeedback;
+        restoreCopyButtonDefaultLabel(button);
+        copyButtonFeedbackTimers.delete(button);
+      }, holdMs);
+      copyButtonFeedbackTimers.set(button, timer);
+    }
+  }
 
   function showCopyToast(text) {
     let toast = byId('copy_toast_global');
@@ -1654,29 +1786,40 @@ function bindCopyPvValueButtons() {
   }
 
   buttons.forEach((button) => {
+    const baseLabel = button.getAttribute('aria-label') || button.getAttribute('title') || 'Copiar apenas valor do PV';
+    button.dataset.baseCopyLabel = baseLabel;
+
     button.addEventListener('click', async () => {
       const targetId = button.dataset.pvTarget;
-      // add click efect
-        button.classList.add('clicked');
-        setTimeout(() => {
-          button.classList.remove('clicked');
-        }, 100);
+      button.classList.add('clicked');
+      setTimeout(() => {
+        button.classList.remove('clicked');
+      }, 140);
+      triggerCopyHaptic(8);
 
-      if (!targetId) return;
+      if (!targetId) {
+        setCopyButtonFeedback(button, 'error', 'Sem alvo para copiar', 1200);
+        return;
+      }
 
       const pvText = byId(targetId)?.textContent || '';
       const valueOnly = extractPvNumericValue(pvText);
       if (!valueOnly || valueOnly === '—') {
+        setCopyButtonFeedback(button, 'error', 'Sem valor', 1200);
         showCopyToast('Sem valor para copiar');
         return;
       }
 
+      setCopyButtonFeedback(button, 'pending', 'Copiando...');
       showCopyToast('Copiando...');
 
       try {
         await navigator.clipboard.writeText(valueOnly);
+        setCopyButtonFeedback(button, 'success', 'Copiado', 1200);
+        triggerCopyHaptic([14, 20, 18]);
         showCopyToast('Copiado!');
       } catch {
+        setCopyButtonFeedback(button, 'error', 'Falha ao copiar', 1500);
         showCopyToast('Falha ao copiar');
       }
     });
@@ -1700,7 +1843,9 @@ function bindMarketplaceFields(prefix) {
 
     element.addEventListener('input', () => {
       if (element.tagName !== 'SELECT' && isNumericField(field, prefix)) {
-        const clean = sanitizeAndClampNumberString(element.value, 2);
+        const clean = (PERCENT_FIELDS.includes(field) || (prefix === 'ml' && field === 'impostos'))
+          ? sanitizeAndClampNumberString(element.value, 2)
+          : formatCurrencyTypingValue(element.value, 2);
         if (element.value !== clean) element.value = clean;
       }
       recalc(prefix);
@@ -1763,6 +1908,7 @@ function buildShopeeSimHtml(data) {
   const {
     pv,
     custo,
+    embalagem = 0,
     margemLucro,
     pDas,
     pDesc,
@@ -1789,12 +1935,11 @@ function buildShopeeSimHtml(data) {
 
   function simulateFor(pvTest, bracket) {
     const vCom = pvTest * bracket.com;
-    const vMargem = pvTest * margemLucro;
     const vDas = pvTest * pDas;
     const vDesc = pvTest * pDesc;
     const vSpike = pvTest * pSpike;
-    const total = vCom + vMargem + vDas + vDesc + vSpike + bracket.tf;
-    const lucroSim = pvTest - custo - total;
+    const total = vCom + vDas + vDesc + vSpike + bracket.tf;
+    const lucroSim = pvTest - custo - embalagem - total;
     const margemSim = pvTest > 0 ? lucroSim / pvTest : 0;
     return { lucroSim, margemSim, com: bracket.com, tf: bracket.tf };
   }
@@ -2035,7 +2180,7 @@ function init() {
         resetAll();
       }
     });
-  } 
+  }
 
   for (const prefix of MARKETPLACES) {
     bindMarketplaceFields(prefix);

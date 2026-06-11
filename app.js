@@ -70,6 +70,47 @@ function parseCustoTiny(value) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function parseEstoqueTiny(value) {
+  if (value === null || value === undefined || value === '') return null;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+
+  const raw = String(value).trim();
+  if (!raw) return null;
+
+  if (/^-?\d+(\.\d+)?$/.test(raw)) {
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  if (/^-?\d+(,\d+)?$/.test(raw)) {
+    const parsed = Number(raw.replace(',', '.'));
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  const normalized = raw.replace(/\./g, '').replace(',', '.');
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function isTinyUnavailableError(error) {
+  if (!error) return false;
+
+  const code = String(error.code || '').toUpperCase();
+  const knownNetworkCodes = new Set([
+    'ECONNABORTED',
+    'ECONNREFUSED',
+    'ECONNRESET',
+    'ENOTFOUND',
+    'EAI_AGAIN',
+    'ETIMEDOUT'
+  ]);
+
+  if (knownNetworkCodes.has(code)) return true;
+
+  const status = Number(error.response?.status);
+  return Number.isFinite(status) && status >= 500;
+}
+
 // Busca Produto via endpoint de pesquisa do Tiny e retorna o melhor candidato
 async function buscarProdutoPorTermo(term) {
   const pesquisaResponse = await axios.get('https://api.tiny.com.br/api2/produtos.pesquisa.php', {
@@ -128,24 +169,6 @@ async function obterProdutoTinyPorId(id) {
   return produtoResponse?.data?.retorno?.produto || null;
 }
 
-// Envia alteração de produto para o Tiny (recebe objeto `produto` já montado)
-async function alterarProdutoTiny(produto) {
-  const response = await axios.post(
-    'https://api.tiny.com.br/api2/produto.alterar.php',
-    null,
-    {
-      params: {
-        token: TOKEN,
-        formato: 'json',
-        produto: JSON.stringify(produto)
-      }
-    }
-  );
-
-  console.log('Retorno Tiny:', JSON.stringify(response?.data, null, 2));
-  return response.data;
-}
-
 // Wrapper simples para buscar produto completo por ID (mesma função que obterProdutoTinyPorId)
 // Mantido para clareza de uso no fluxo de atualização.
 async function obterProdutoPorId(id) {
@@ -198,6 +221,25 @@ app.get('/preco-custo/:sku', async (req, res) => {
 
     const produto = produtoResponse.data.retorno.produto;
 
+    let estoqueProduto = null;
+    try {
+      const estoqueResponse = await axios.get(
+        'https://api.tiny.com.br/api2/produto.obter.estoque.php',
+        {
+          params: {
+            token: TOKEN,
+            id: produtoId,
+            formato: 'json'
+          }
+        }
+      );
+
+      const estoqueRaw = estoqueResponse?.data?.retorno?.produto?.saldo;
+      estoqueProduto = parseEstoqueTiny(estoqueRaw);
+    } catch (estoqueError) {
+      console.warn('Falha ao obter estoque no Tiny:', estoqueError?.response?.data || estoqueError?.message);
+    }
+
     // Log de mapeamentos (se existir) para inspeção
     try {
       const mapeamentos = produto.mapeamentos || [];
@@ -221,6 +263,7 @@ app.get('/preco-custo/:sku', async (req, res) => {
     res.json({
       sku: produto.codigo,
       nome: produto.nome,
+      estoque: estoqueProduto,
       preco_custo: produto.preco_custo,
       categoria: extrairCategoriaTiny(produto.categoria || produto.categorias || ''),
       peso_bruto: produto.peso_bruto ?? '',
@@ -231,78 +274,17 @@ app.get('/preco-custo/:sku', async (req, res) => {
 
   } catch (error) {
     console.error(error.response?.data || error.message);
-    res.status(500).json({ erro: 'Erro ao consultar Tiny' });
-  }
-});
 
-app.post('/preco-custo/atualizar', async (req, res) => {
-  try {
-    const sku = String(req.body?.sku || '').trim();
-    const precoCusto = parseCustoTiny(req.body?.preco_custo);
-
-    if (!TOKEN) {
-      return res.status(500).json({ erro: 'TINY_TOKEN não configurado no servidor.' });
-    }
-
-    if (!sku) {
-      return res.status(400).json({ erro: 'SKU obrigatório' });
-    }
-
-    if (!(precoCusto > 0)) {
-      return res.status(400).json({ erro: 'Preço de custo inválido' });
-    }
-
-    const produto = await buscarProdutoPorSKU(sku);
-    if (!produto?.id) {
-      return res.status(404).json({ erro: 'Produto não encontrado' });
-    }
-
-    if (produto.idProdutoPai && Number(produto.idProdutoPai) > 0) {
-      console.warn('Produto é variação:', sku);
-    }
-
-    // Obter produto completo antes de montar o payload
-    const produtoAtual = await obterProdutoPorId(produto.id);
-    if (!produtoAtual) {
-      return res.status(404).json({ erro: 'Não foi possível obter dados completos do produto no Tiny.' });
-    }
-
-    const produtoPayload = {
-      id: produto.idProdutoPai,
-      codigo: produtoAtual.codigo,
-      nome: produtoAtual.nome,
-      tipo: produtoAtual.tipo,
-      situacao: produtoAtual.situacao,
-      unidade: produtoAtual.unidade,
-      preco_custo: Number(precoCusto)
-    };
-
-    const tinyResponse = await alterarProdutoTiny(produtoPayload);
-
-    const retorno = tinyResponse?.retorno;
-
-    if (String(retorno?.status || '').toUpperCase() !== 'OK') {
-      return res.status(400).json({
-        erro: 'Erro no Tiny',
-        detalhe: retorno
+    if (isTinyUnavailableError(error)) {
+      return res.status(503).json({
+        erro: 'API do Tiny indisponível no momento',
+        codigo: 'TINY_UNAVAILABLE'
       });
     }
 
-    return res.json({
-      ok: true,
-      sku,
-      preco_custo: Number(precoCusto).toFixed(2),
-      mensagem: 'Atualizado com sucesso no Tiny'
-    });
-  } catch (err) {
-    console.error(err?.response?.data || err.message);
-
-    return res.status(500).json({
-      erro: 'Erro ao atualizar no Tiny'
-    });
+    res.status(500).json({ erro: 'Erro ao consultar Tiny' });
   }
 });
-
 
 // Rota de busca para typeahead: retorna lista de produtos (id, sku, nome)
 app.get('/search', async (req, res) => {
@@ -369,6 +351,14 @@ app.get('/search', async (req, res) => {
     res.json(items);
   } catch (err) {
     console.error('search error', err.response?.data || err.message);
+
+    if (isTinyUnavailableError(err)) {
+      return res.status(503).json({
+        erro: 'API do Tiny indisponível no momento',
+        codigo: 'TINY_UNAVAILABLE'
+      });
+    }
+
     res.status(500).json([]);
   }
 });
