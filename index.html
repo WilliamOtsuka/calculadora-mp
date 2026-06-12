@@ -11,6 +11,9 @@
 </head>
 
 <body>
+    <button id="unlock_all_inputs_btn" type="button" class="unlock-all-btn" aria-pressed="false">
+        Liberar bloqueados
+    </button>
     <div class="container">
         <div class="card">
             <div class="forms">
@@ -201,7 +204,7 @@
                                 <div>
                                     <label>Imposto simples <span class="muted">(auto %)</span></label>
                                     <div class="row"><input id="impostos_ml" class="auto-field" type="text" readonly
-                                            inputmode="decimal" placeholder="0" /><span class="sufix">%</span></div>
+                                            title="Campo calculado automaticamente" /><span class="sufix">%</span></div>
                                 </div>
                                 <div>
                                     <label>ADS <span class="muted">(%)</span></label>
@@ -439,210 +442,224 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="card">
-                <div class="market-flex">
-                    <div class="detail-col ml">
-                        <h2 class="mt-0" id="ml">Detalhamento ML</h2>
-                        <div class="ml-detail-split">
-                            <div class="ml-detail-side">
-                                <h3 class="ml-detail-title">Clássico</h3>
-                                <table>
-                                    <tbody>
-                                        <tr>
-                                            <th>Comissão (R$)</th>
-                                            <td id="det_comissao_ml_classico">R$ 0,00</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Imposto simples (R$)</th>
-                                            <td id="det_impostos_ml_classico">R$ 0,00</td>
-                                        </tr>
-                                        <tr>
-                                            <th>ADS (R$)</th>
-                                            <td id="det_ads_ml_classico">R$ 0,00</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Margem p/ descontos (R$)</th>
-                                            <td id="det_descontos_ml_classico">R$ 0,00</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Frete (R$)</th>
-                                            <td id="det_custos_adic_ml_classico">R$ 0,00</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Custo de embalagem (R$)</th>
-                                            <td id="det_embalagem_ml_classico">R$ 0,00</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Total taxas/deduções (R$)</th>
-                                            <td id="det_total_taxas_ml_classico" class="fw-700">R$ 0,00</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Valor líquido (R$)</th>
-                                            <td id="det_liquido_ml_classico">R$ 0,00</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Lucro líquido (R$)</th>
-                                            <td id="det_lucro_ml_classico" class="warn">R$ 0,00</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Margem efetiva</th>
-                                            <td id="det_margem_efetiva_ml_classico" class="warn">0,00%</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="ml-detail-side ml-detail-side-premium">
-                                <h3 class="ml-detail-title">Premium</h3>
-                                <table>
-                                    <tbody>
-                                        <tr>
-                                            <th>Comissão (R$)</th>
-                                            <td id="det_comissao_ml_premium">R$ 0,00</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Imposto simples (R$)</th>
-                                            <td id="det_impostos_ml_premium">R$ 0,00</td>
-                                        </tr>
-                                        <tr>
-                                            <th>ADS (R$)</th>
-                                            <td id="det_ads_ml_premium">R$ 0,00</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Margem p/ descontos (R$)</th>
-                                            <td id="det_descontos_ml_premium">R$ 0,00</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Frete (R$)</th>
-                                            <td id="det_custos_adic_ml_premium">R$ 0,00</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Custo de embalagem (R$)</th>
-                                            <td id="det_embalagem_ml_premium">R$ 0,00</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Total taxas/deduções (R$)</th>
-                                            <td id="det_total_taxas_ml_premium" class="fw-700">R$ 0,00</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Valor líquido (R$)</th>
-                                            <td id="det_liquido_ml_premium">R$ 0,00</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Lucro líquido (R$)</th>
-                                            <td id="det_lucro_ml_premium" class="warn">R$ 0,00</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Margem efetiva</th>
-                                            <td id="det_margem_efetiva_ml_premium" class="warn">0,00%</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="detail-col shopee">
-                        <h2 class="mt-0" id="shopee">Detalhamento Shopee</h2>
-                        <table>
-                            <tbody>
-                                <tr>
-                                    <th>Comissão (R$)</th>
-                                    <td id="det_comissao_shopee">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>DAS Simples (R$)</th>
-                                    <td id="det_das_shopee">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>Margem p/ descontos (R$)</th>
-                                    <td id="det_descontos_shopee">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>Spike Day (R$)</th>
-                                    <td id="det_spike_shopee">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>Margem desejada (R$)</th>
-                                    <td id="det_margem_lucro_shopee">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>Total de deduções + margem (R$)</th>
-                                    <td id="det_total_taxas_shopee" class="fw-700">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>Taxa fixa (R$)</th>
-                                    <td id="det_taxa_fixa_shopee">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>Lucro estimado (R$)</th>
-                                    <td id="det_lucro_shopee" class="warn">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>Margem de lucro efetiva</th>
-                                    <td id="det_margem_efetiva_shopee" class="warn">0,00%</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="detail-col magalu">
-                        <h2 class="mt-0" id="magalu">Detalhamento Magalu</h2>
-                        <table>
-                            <tbody>
-                                <tr>
-                                    <th>Comissão (R$)</th>
-                                    <td id="det_comissao_magalu">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>Frete loja (R$)</th>
-                                    <td id="det_subsidio_magalu">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>DAS Simples (R$)</th>
-                                    <td id="det_das_magalu">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>Margem p/ descontos (R$)</th>
-                                    <td id="det_descontos_magalu">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>Outras taxas (R$)</th>
-                                    <td id="det_outras_magalu">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>Total de taxas (R$)</th>
-                                    <td id="det_total_taxas_magalu" class="fw-700">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>Taxa fixa (R$)</th>
-                                    <td id="det_taxa_fixa_magalu">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>Lucro estimado (R$)</th>
-                                    <td id="det_lucro_magalu" class="warn">R$ 0,00</td>
-                                </tr>
-                                <tr>
-                                    <th>Margem de lucro efetiva</th>
-                                    <td id="det_margem_efetiva_magalu" class="warn">0,00%</td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+        <div class="market-flex">
+            <div class="detail-col ml">
+                <div class="title-table">
+                    <h2 class="mt-0" id="ml">Detalhamento ML</h2>
+                    <button id="btn_testar_pv_ml" type="button" class="small-btn">Testar PV</button>
+                </div>
+                <div id="testar_pv_ml_wrap" class="test-pv-wrap hidden">
+                    <div class="row">
+                        <input id="input_testar_pv_ml" type="text" inputmode="decimal" placeholder="Digite o PV desejado" />
                     </div>
                 </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th colspan="1" class="headTipo"></th>
+                            <th colspan="2" class="headTipo">Clássico</th>
+                            <th colspan="2" class="headTipo">Premium</th>
+                        </tr>
+                        <tr>
+                            <th>Item</th>
+                            <th>%</th>
+                            <th>Valor (R$)</th>
+                            <th>%</th>
+                            <th>Valor (R$)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>Comissão</th>
+                            <td id="pct_comissao_ml_classico">0,00%</td>
+                            <td id="det_comissao_ml_classico">R$ 0,00</td>
+                            <td id="pct_comissao_ml_premium">0,00%</td>
+                            <td id="det_comissao_ml_premium">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <th>DAS simples</th>
+                            <td id="pct_das_ml_classico">0,00%</td>
+                            <td id="det_das_ml_classico">R$ 0,00</td>
+                            <td id="pct_das_ml_premium">0,00%</td>
+                            <td id="det_das_ml_premium">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <th>ADS</th>
+                            <td id="pct_ads_ml_classico">0,00%</td>
+                            <td id="det_ads_ml_classico">R$ 0,00</td>
+                            <td id="pct_ads_ml_premium">0,00%</td>
+                            <td id="det_ads_ml_premium">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <th>Margem p/ descontos</th>
+                            <td id="pct_descontos_ml_classico">0,00%</td>
+                            <td id="det_descontos_ml_classico">R$ 0,00</td>
+                            <td id="pct_descontos_ml_premium">0,00%</td>
+                            <td id="det_descontos_ml_premium">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <th>Custo embalagem</th>
+                            <td id="pct_embalagem_ml_classico">—</td>
+                            <td id="det_embalagem_ml_classico">R$ 0,00</td>
+                            <td id="pct_embalagem_ml_premium">—</td>
+                            <td id="det_embalagem_ml_premium">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <th>Frete</th>
+                            <td id="pct_custos_adic_ml_classico">—</td>
+                            <td id="det_custos_adic_ml_classico">R$ 0,00</td>
+                            <td id="pct_custos_adic_ml_premium">—</td>
+                            <td id="det_custos_adic_ml_premium">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <th>Custo Total</th>
+                            <td id="pct_custo_total_ml_classico">—</td>
+                            <td id="det_custo_total_ml_classico" class="warn">R$ 0,00</td>
+                            <td id="pct_custo_total_ml_premium">—</td>
+                            <td id="det_custo_total_ml_premium" class="warn">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <th>Lucro líquido</th>
+                            <td id="pct_lucro_ml_classico">0,00%</td>
+                            <td id="det_lucro_ml_classico" class="warn">R$ 0,00</td>
+                            <td id="pct_lucro_ml_premium">0,00%</td>
+                            <td id="det_lucro_ml_premium" class="warn">R$ 0,00</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
+            <div class="detail-col shopee">
+                <h2 class="mt-0" id="shopee">Detalhamento Shopee</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>%</th>
+                            <th>Valor (R$)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>Comissão</th>
+                            <td id="pct_comissao_shopee">0,00%</td>
+                            <td id="det_comissao_shopee">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <th>DAS Simples</th>
+                            <td id="pct_das_shopee">0,00%</td>
+                            <td id="det_das_shopee">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <th>Spike Day</th>
+                            <td id="pct_spike_shopee">0,00%</td>
+                            <td id="det_spike_shopee">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <th>Margem p/ descontos</th>
+                            <td id="pct_descontos_shopee">0,00%</td>
+                            <td id="det_descontos_shopee">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <th>Custo embalagem</th>
+                            <td id="pct_embalagem_shopee">—</td>
+                            <td id="det_embalagem_shopee">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <th>Taxa fixa</th>
+                            <td id="pct_taxa_fixa_shopee">—</td>
+                            <td id="det_taxa_fixa_shopee">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <th>Custo Total</th>
+                            <td id="pct_custo_total_shopee">—</td>
+                            <td id="det_custo_total_shopee" class="warn">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <th>Lucro estimado</th>
+                            <td id="pct_lucro_shopee">0,00%</td>
+                            <td id="det_lucro_shopee" class="warn">R$ 0,00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="detail-col magalu">
+                <h2 class="mt-0" id="magalu">Detalhamento Magalu</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>%</th>
+                            <th>Valor (R$)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>Comissão</th>
+                            <td id="pct_comissao_magalu">0,00%</td>
+                            <td id="det_comissao_magalu">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <th>DAS Simples</th>
+                            <td id="pct_das_magalu">0,00%</td>
+                            <td id="det_das_magalu">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <th>Outras taxas</th>
+                            <td id="pct_outras_magalu">0,00%</td>
+                            <td id="det_outras_magalu">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <th>Margem p/ descontos</th>
+                            <td id="pct_descontos_magalu">0,00%</td>
+                            <td id="det_descontos_magalu">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <th>Custo embalagem</th>
+                            <td id="pct_embalagem_magalu">—</td>
+                            <td id="det_embalagem_magalu">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <th>Frete</th>
+                            <td id="pct_subsidio_magalu">—</td>
+                            <td id="det_subsidio_magalu">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <th>Taxa fixa</th>
+                            <td id="pct_taxa_fixa_magalu">—</td>
+                            <td id="det_taxa_fixa_magalu">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <th>Custo Total</th>
+                            <td id="pct_custo_total_magalu">—</td>
+                            <td id="det_custo_total_magalu" class="warn">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <th>Lucro estimado</th>
+                            <td id="pct_lucro_magalu">0,00%</td>
+                            <td id="det_lucro_magalu" class="warn">R$ 0,00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-            <script type="module" src="js/fontawesome-init.js"></script>
-            <script src="js/script.js" defer></script>
-            <!-- Modal de simulação -->
-            <div id="modal_sim" class="modal hidden" aria-hidden="true">
-                <div class="modal-overlay"></div>
-                <div class="modal-content">
-                    <button id="modal_close" class="modal-close">×</button>
-                    <h3>Simulação de faixas — Shopee</h3>
-                    <div id="modal_body">
-                        <!-- conteúdo preenchido por JS -->
-                    </div>
+        <script type="module" src="js/fontawesome-init.js"></script>
+        <script src="js/script.js" defer></script>
+        <!-- Modal de simulação -->
+        <div id="modal_sim" class="modal hidden" aria-hidden="true">
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <button id="modal_close" class="modal-close">×</button>
+                <h3>Simulação de faixas — Shopee</h3>
+                <div id="modal_body">
+                    <!-- conteúdo preenchido por JS -->
                 </div>
             </div>
+        </div>
+    </div>
 </body>
 
 </html>

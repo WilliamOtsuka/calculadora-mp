@@ -20,6 +20,8 @@ const MAGALU_COMISSAO = 0.148;
 const MAGALU_FRETE_GRATIS_THRESHOLD = 79;
 let isMargemLucroLinked = false;
 let isFreteMlLinked = false;
+let isUnlockAllInputsActive = false;
+const readonlyIntentions = new WeakMap();
 
 const PV_ALERT_TARGETS = {
   ml: [
@@ -136,6 +138,61 @@ const SHOPEE_BRACKETS = [
 
 function byId(id) {
   return document.getElementById(id);
+}
+
+function getInputReadonlyIntention(input) {
+  if (!(input instanceof HTMLInputElement)) return false;
+
+  if (readonlyIntentions.has(input)) {
+    return Boolean(readonlyIntentions.get(input));
+  }
+
+  const current = Boolean(input.readOnly);
+  readonlyIntentions.set(input, current);
+  return current;
+}
+
+function setInputReadonly(inputOrId, readonly) {
+  const input = typeof inputOrId === 'string' ? byId(inputOrId) : inputOrId;
+  if (!(input instanceof HTMLInputElement)) return;
+
+  const intended = Boolean(readonly);
+  readonlyIntentions.set(input, intended);
+  input.readOnly = isUnlockAllInputsActive ? false : intended;
+}
+
+function updateUnlockAllInputsButtonState() {
+  const button = byId('unlock_all_inputs_btn');
+  if (!button) return;
+
+  button.classList.toggle('is-unlocked', isUnlockAllInputsActive);
+  button.setAttribute('aria-pressed', isUnlockAllInputsActive ? 'true' : 'false');
+  button.textContent = isUnlockAllInputsActive ? 'Restaurar bloqueios' : 'Liberar bloqueados';
+  button.title = isUnlockAllInputsActive
+    ? 'Clique para restaurar os bloqueios atuais'
+    : 'Clique para liberar todos os inputs bloqueados';
+}
+
+function applyUnlockAllInputsState(unlocked) {
+  isUnlockAllInputsActive = Boolean(unlocked);
+
+  const inputs = Array.from(document.querySelectorAll('input'));
+  inputs.forEach((input) => {
+    const intendedReadonly = getInputReadonlyIntention(input);
+    input.readOnly = isUnlockAllInputsActive ? false : intendedReadonly;
+  });
+
+  updateUnlockAllInputsButtonState();
+}
+
+function bindUnlockAllInputsToggle() {
+  const button = byId('unlock_all_inputs_btn');
+  if (!button) return;
+
+  updateUnlockAllInputsButtonState();
+  button.addEventListener('click', () => {
+    applyUnlockAllInputsState(!isUnlockAllInputsActive);
+  });
 }
 
 function setText(id, text) {
@@ -340,6 +397,15 @@ function formatNumber(value, decimals = 2) {
 
 function formatPercentDisplay(rate, decimals = 2) {
   return `${formatNumber(rate * 100, decimals)}%`;
+}
+
+function setPercentText(id, rate, decimals = 2) {
+  if (!Number.isFinite(rate)) {
+    setText(id, '—');
+    return;
+  }
+
+  setText(id, formatPercentDisplay(rate, decimals));
 }
 
 function showMessage(prefix, text = '', visible = false) {
@@ -552,10 +618,10 @@ function applyMagaluCategorySelection(categoria) {
   const taxa = magaluCategoryToTaxaFixa(categoria);
   if (taxa > 0) {
     taxaEl.value = fmtBRL.format(taxa);
-    taxaEl.readOnly = true;
+    setInputReadonly(taxaEl, true);
   } else {
     if (!taxaEl.value || parseDecimal(taxaEl.value) === 0) taxaEl.value = '';
-    taxaEl.readOnly = false;
+    setInputReadonly(taxaEl, false);
   }
 }
 
@@ -606,7 +672,11 @@ function computeMagaluResult() {
       pesoConsiderado,
       freteLoja,
       descontoFrete,
-      pCom
+      pCom,
+      pDas,
+      pDesc,
+      pOutras,
+      margemEfetiva: 0
     };
   }
 
@@ -656,6 +726,9 @@ function computeMagaluResult() {
     freteAplicado,
     descontoFrete,
     pCom,
+    pDas,
+    pDesc,
+    pOutras,
     taxaFixa,
     comFreteGratis: freteAplicado > 0
   };
@@ -663,16 +736,18 @@ function computeMagaluResult() {
 
 function recalcMagalu() {
   showMessage('magalu');
+  const custoProduto = getMoneyField('custo', 'magalu');
+  const custoEmbalagem = getMoneyField('embalagem', 'magalu');
 
   const comissaoEl = byId('comissao_magalu');
   const descontoEl = byId('subsidio_magalu');
   if (comissaoEl) {
     comissaoEl.value = formatNumber(MAGALU_COMISSAO * 100, 2);
-    comissaoEl.readOnly = true;
+    setInputReadonly(comissaoEl, true);
   }
   if (descontoEl) {
     descontoEl.value = formatNumber(getMagaluFreightDiscount() * 100, 2);
-    descontoEl.readOnly = true;
+    setInputReadonly(descontoEl, true);
   }
 
   const pesoReal = parseDecimal(getFieldValue('peso_real', 'magalu'));
@@ -686,7 +761,7 @@ function recalcMagalu() {
     const freteBaseEl = byId('frete_base_magalu');
     if (freteBaseEl) {
       freteBaseEl.value = formatNumber(freteBase, 2);
-      freteBaseEl.readOnly = true;
+      setInputReadonly(freteBaseEl, true);
     }
   }
 
@@ -695,29 +770,48 @@ function recalcMagalu() {
 
   if (result.invalido) {
     setText('pv_magalu', '—');
+    setPercentText('pct_comissao_magalu', result.pCom || 0);
+    setPercentText('pct_das_magalu', result.pDas || 0);
+    setPercentText('pct_outras_magalu', result.pOutras || 0);
+    setPercentText('pct_descontos_magalu', result.pDesc || 0);
+    setText('pct_embalagem_magalu', '—');
+    setText('pct_subsidio_magalu', '—');
+    setText('pct_taxa_fixa_magalu', '—');
+    setText('pct_custo_total_magalu', '—');
+    setPercentText('pct_lucro_magalu', 0);
     setText('det_comissao_magalu', fmtBRL.format(0));
     setText('det_subsidio_magalu', fmtBRL.format(0));
     setText('det_das_magalu', fmtBRL.format(0));
     setText('det_descontos_magalu', fmtBRL.format(0));
     setText('det_outras_magalu', fmtBRL.format(0));
-    setText('det_total_taxas_magalu', fmtBRL.format(0));
+    setText('det_embalagem_magalu', fmtBRL.format(0));
     setText('det_taxa_fixa_magalu', fmtBRL.format(0));
+    setText('det_custo_total_magalu', fmtBRL.format(0));
     setText('det_lucro_magalu', fmtBRL.format(0));
-    setText('det_margem_efetiva_magalu', '0%');
     showMessage('magalu', 'O total de taxas e margem desejada é maior ou igual a 100%.', true);
     return;
   }
 
   setText('pv_magalu', fmtBRL.format(result.pv));
+  setPercentText('pct_comissao_magalu', result.pCom || 0);
+  setPercentText('pct_das_magalu', result.pDas || 0);
+  setPercentText('pct_outras_magalu', result.pOutras || 0);
+  setPercentText('pct_descontos_magalu', result.pDesc || 0);
+  setText('pct_embalagem_magalu', '—');
+  setText('pct_subsidio_magalu', '—');
+  setText('pct_taxa_fixa_magalu', '—');
+  setText('pct_custo_total_magalu', '—');
+  setPercentText('pct_lucro_magalu', result.margemEfetiva || 0);
   setText('det_comissao_magalu', fmtBRL.format(result.vCom));
   setText('det_subsidio_magalu', fmtBRL.format(result.freteAplicado));
   setText('det_das_magalu', fmtBRL.format(result.vDas));
   setText('det_descontos_magalu', fmtBRL.format(result.vDesc));
   setText('det_outras_magalu', fmtBRL.format(result.vOutras));
-  setText('det_total_taxas_magalu', fmtBRL.format(result.totalTaxasValor));
+  setText('det_embalagem_magalu', fmtBRL.format(custoEmbalagem));
   setText('det_taxa_fixa_magalu', fmtBRL.format(result.taxaFixa));
+  const custoTotalMagalu = custoProduto + custoEmbalagem + result.totalTaxasValor;
+  setText('det_custo_total_magalu', fmtBRL.format(custoTotalMagalu));
   setText('det_lucro_magalu', fmtBRL.format(result.lucro));
-  setText('det_margem_efetiva_magalu', formatPercentDisplay(result.margemEfetiva));
 
   const shippingMode = result.comFreteGratis
     ? 'Frete considerado porque o PV ficou acima de R$ 79,00.'
@@ -727,7 +821,7 @@ function recalcMagalu() {
 
 function computeMlOffer({ custo, embalagem, margemLucro, frete, tipo }) {
   const comissao = tipo === 'premium' ? ML_COMISSAO_PREMIUM : ML_COMISSAO_CLASSICO;
-  const impostosPct = ML_IMPOSTO_SIMPLES;
+  const impostosPct = getPercentField('impostos', 'ml');
   const adsPct = getPercentField('ads', 'ml');
   const pDesc = getPercentField('descontos', 'ml');
   const totalTaxas = comissao + impostosPct + adsPct + pDesc;
@@ -748,6 +842,9 @@ function computeMlOffer({ custo, embalagem, margemLucro, frete, tipo }) {
       margem: 0,
       tt: totalTaxas,
       comissao,
+      impostosPct,
+      adsPct,
+      pDesc,
       invalido: true
     };
   }
@@ -776,8 +873,117 @@ function computeMlOffer({ custo, embalagem, margemLucro, frete, tipo }) {
     margem,
     tt: totalTaxas,
     comissao,
+    impostosPct,
+    adsPct,
+    pDesc,
     invalido: false
   };
+}
+
+function computeMlOfferByPv({ custo, embalagem, pv, frete, tipo }) {
+  const comissao = tipo === 'premium' ? ML_COMISSAO_PREMIUM : ML_COMISSAO_CLASSICO;
+  const impostosPct = getPercentField('impostos', 'ml');
+  const adsPct = getPercentField('ads', 'ml');
+  const pDesc = getPercentField('descontos', 'ml');
+  const totalTaxas = comissao + impostosPct + adsPct + pDesc;
+
+  if (!Number.isFinite(pv) || pv <= 0) {
+    return {
+      pv: 0,
+      vCom: 0,
+      vImp: 0,
+      vAds: 0,
+      vDesc: 0,
+      embalagem,
+      custosAdic: frete,
+      totalDeducoes: 0,
+      liquido: 0,
+      lucro: 0,
+      margem: 0,
+      tt: totalTaxas,
+      comissao,
+      impostosPct,
+      adsPct,
+      pDesc,
+      invalido: true
+    };
+  }
+
+  const vCom = pv * comissao;
+  const vImp = pv * impostosPct;
+  const vAds = pv * adsPct;
+  const vDesc = pv * pDesc;
+  const totalDeducoes = vCom + vImp + vAds + vDesc + frete;
+  const liquido = pv - totalDeducoes;
+  const lucro = liquido - custo - embalagem;
+  const margem = pv > 0 ? lucro / pv : 0;
+
+  return {
+    pv,
+    vCom,
+    vImp,
+    vAds,
+    vDesc,
+    embalagem,
+    custosAdic: frete,
+    totalDeducoes,
+    liquido,
+    lucro,
+    margem,
+    tt: totalTaxas,
+    comissao,
+    impostosPct,
+    adsPct,
+    pDesc,
+    invalido: false
+  };
+}
+
+function getMlPvTestValue() {
+  const input = byId('input_testar_pv_ml');
+  if (!input) return 0;
+  const parsed = parseDecimal(input.value);
+  return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+}
+
+function isMlPvTestVisible() {
+  const wrap = byId('testar_pv_ml_wrap');
+  return Boolean(wrap) && !wrap.classList.contains('hidden');
+}
+
+function applyMlPvTestIfNeeded() {
+  if (!isMlPvTestVisible()) {
+    return false;
+  }
+
+  const pvTeste = getMlPvTestValue();
+  if (pvTeste <= 0) {
+    return false;
+  }
+
+  const custo = getMoneyField('custo', 'ml');
+  const embalagem = getMoneyField('embalagem', 'ml');
+  const freteClassico = parseDecimal(byId('frete_ml_classico')?.value || 0);
+  const fretePremium = parseDecimal(byId('frete_ml_premium')?.value || 0);
+
+  const classicoTest = computeMlOfferByPv({
+    custo,
+    embalagem,
+    pv: pvTeste,
+    frete: freteClassico,
+    tipo: 'classico'
+  });
+  const premiumTest = computeMlOfferByPv({
+    custo,
+    embalagem,
+    pv: pvTeste,
+    frete: fretePremium,
+    tipo: 'premium'
+  });
+
+  fillMlDetail('classico', classicoTest);
+  fillMlDetail('premium', premiumTest);
+  return true;
 }
 
 function fillMlOffer(tipo, result) {
@@ -796,31 +1002,51 @@ function fillMlOffer(tipo, result) {
 
 function fillMlDetail(tipo, offer) {
   const suffix = `ml_${tipo}`;
+  const custoTotalId = tipo === 'classico'
+    ? 'det_custo_total_ml_classico'
+    : 'det_custo_total_ml_premium';
+  const pctCustoTotalId = tipo === 'classico'
+    ? 'pct_custo_total_ml_classico'
+    : 'pct_custo_total_ml_premium';
 
   if (!offer) {
+    setText(`pct_comissao_${suffix}`, '—');
+    setText(`pct_das_${suffix}`, '—');
+    setText(`pct_ads_${suffix}`, '—');
+    setText(`pct_descontos_${suffix}`, '—');
+    setText(`pct_custos_adic_${suffix}`, '—');
+    setText(`pct_embalagem_${suffix}`, '—');
+    setText(pctCustoTotalId, '—');
+    setText(`pct_lucro_${suffix}`, '—');
     setText(`det_comissao_${suffix}`, fmtBRL.format(0));
-    setText(`det_impostos_${suffix}`, fmtBRL.format(0));
+    setText(`det_das_${suffix}`, fmtBRL.format(0));
     setText(`det_ads_${suffix}`, fmtBRL.format(0));
     setText(`det_descontos_${suffix}`, fmtBRL.format(0));
     setText(`det_custos_adic_${suffix}`, fmtBRL.format(0));
     setText(`det_embalagem_${suffix}`, fmtBRL.format(0));
-    setText(`det_total_taxas_${suffix}`, fmtBRL.format(0));
-    setText(`det_liquido_${suffix}`, fmtBRL.format(0));
+    setText(custoTotalId, fmtBRL.format(0));
     setText(`det_lucro_${suffix}`, fmtBRL.format(0));
-    setText(`det_margem_efetiva_${suffix}`, '0%');
     return;
   }
 
+  setPercentText(`pct_comissao_${suffix}`, offer.comissao || 0);
+  setPercentText(`pct_das_${suffix}`, offer.impostosPct || 0);
+  setPercentText(`pct_ads_${suffix}`, offer.adsPct || 0);
+  setPercentText(`pct_descontos_${suffix}`, offer.pDesc || 0);
+  setText(`pct_custos_adic_${suffix}`, '—');
+  setText(`pct_embalagem_${suffix}`, '—');
+  setText(pctCustoTotalId, '—');
+  setPercentText(`pct_lucro_${suffix}`, offer.margem || 0);
   setText(`det_comissao_${suffix}`, fmtBRL.format(offer.vCom || 0));
-  setText(`det_impostos_${suffix}`, fmtBRL.format(offer.vImp || 0));
+  setText(`det_das_${suffix}`, fmtBRL.format(offer.vImp || 0));
   setText(`det_ads_${suffix}`, fmtBRL.format(offer.vAds || 0));
   setText(`det_descontos_${suffix}`, fmtBRL.format(offer.vDesc || 0));
   setText(`det_custos_adic_${suffix}`, fmtBRL.format(offer.custosAdic || 0));
   setText(`det_embalagem_${suffix}`, fmtBRL.format(offer.embalagem || 0));
-  setText(`det_total_taxas_${suffix}`, fmtBRL.format(offer.totalDeducoes || 0));
-  setText(`det_liquido_${suffix}`, fmtBRL.format(offer.liquido || 0));
+  const custoProduto = getMoneyField('custo', 'ml');
+  const precoCustoTotal = custoProduto + (offer.embalagem || 0) + (offer.totalDeducoes || 0);
+  setText(custoTotalId, fmtBRL.format(precoCustoTotal));
   setText(`det_lucro_${suffix}`, fmtBRL.format(offer.lucro || 0));
-  setText(`det_margem_efetiva_${suffix}`, formatPercentDisplay(offer.margem || 0));
 }
 
 function recalcMercadoLivre() {
@@ -829,12 +1055,6 @@ function recalcMercadoLivre() {
   const margemLucro = getPercentField('margem_lucro', 'ml');
   const freteClassico = parseDecimal(byId('frete_ml_classico')?.value || 0);
   const fretePremium = parseDecimal(byId('frete_ml_premium')?.value || 0);
-
-  const impostosEl = byId('impostos_ml');
-  if (impostosEl) {
-    impostosEl.value = formatNumber(ML_IMPOSTO_SIMPLES * 100, 2);
-    impostosEl.readOnly = true;
-  }
 
   showMessage('ml');
 
@@ -845,6 +1065,11 @@ function recalcMercadoLivre() {
   fillMlOffer('premium', premium);
   fillMlDetail('classico', classico);
   fillMlDetail('premium', premium);
+
+  const isTestingPv = applyMlPvTestIfNeeded();
+  if (isTestingPv) {
+    return;
+  }
 
   if (classico.invalido || premium.invalido) {
     showMessage('ml', 'O total de comissao, imposto simples, ADS, margem p/ descontos e margem desejada e maior ou igual a 100%.', true);
@@ -934,15 +1159,23 @@ function recalcShopee() {
   setValue('taxa_fixa_shopee', fmtBRL.format(result.taxaFixa));
   setValue('total_taxas_shopee', formatNumber(result.totalTaxasPct * 100, 3));
 
+  setPercentText('pct_comissao_shopee', result.comissaoBase || 0);
+  setPercentText('pct_das_shopee', result.pDas || 0);
+  setPercentText('pct_spike_shopee', result.pSpike || 0);
+  setPercentText('pct_descontos_shopee', result.pDesc || 0);
+  setText('pct_embalagem_shopee', '—');
+  setText('pct_taxa_fixa_shopee', '—');
+  setText('pct_custo_total_shopee', '—');
+  setPercentText('pct_lucro_shopee', result.margemEfetiva || 0);
   setText('det_comissao_shopee', fmtBRL.format(result.vCom));
   setText('det_das_shopee', fmtBRL.format(result.vDas));
   setText('det_descontos_shopee', fmtBRL.format(result.vDesc));
   setText('det_spike_shopee', fmtBRL.format(result.vSpike));
-  setText('det_margem_lucro_shopee', fmtBRL.format(result.vMargemLucro));
-  setText('det_total_taxas_shopee', fmtBRL.format(result.totalTaxasValor));
+  setText('det_embalagem_shopee', fmtBRL.format(result.embalagem));
   setText('det_taxa_fixa_shopee', fmtBRL.format(result.taxaFixa));
+  const custoTotalShopee = result.custo + result.embalagem + result.totalTaxasValor;
+  setText('det_custo_total_shopee', fmtBRL.format(custoTotalShopee));
   setText('det_lucro_shopee', fmtBRL.format(result.lucro));
-  setText('det_margem_efetiva_shopee', formatPercentDisplay(result.margemEfetiva));
 
   window.lastShopeeSim = {
     pv: result.pv,
@@ -967,7 +1200,7 @@ function recalcDefaultMarketplace(prefix) {
   const pDas = getPercentField('das', prefix);
   const pDesc = getPercentField('descontos', prefix);
   const pOutras = getPercentField('outras', prefix);
-  const totalTaxas = pCom + pSub + pDas + pDesc + pOutras;
+  const totalTaxas = pCom + pSub + pDas + pDesc + pOutras + margemLucro;
 
   setValue(`total_taxas_${prefix}`, formatNumber(totalTaxas * 100, 2));
   showMessage(prefix);
@@ -1083,14 +1316,14 @@ function formatFieldOnBlur(element, field, prefix) {
 function setMargemLucroFieldsReadonly(readonly) {
   for (const prefix of MARKETPLACES) {
     const input = byId(`margem_lucro_${prefix}`);
-    if (input) input.readOnly = readonly;
+    if (input) setInputReadonly(input, readonly);
   }
 }
 
 function setMlFreteFieldsReadonly(readonly) {
   ['classico', 'premium'].forEach((tipo) => {
     const input = byId(`frete_ml_${tipo}`);
-    if (input) input.readOnly = readonly;
+    if (input) setInputReadonly(input, readonly);
   });
 }
 
@@ -1115,7 +1348,7 @@ function setMargemLucroLinkState(linked, shouldRecalc = true) {
   isMargemLucroLinked = Boolean(linked);
   setMargemLucroFieldsReadonly(isMargemLucroLinked);
   const sharedInput = byId('shared_margem_lucro');
-  if (sharedInput) sharedInput.readOnly = !isMargemLucroLinked;
+  if (sharedInput) setInputReadonly(sharedInput, !isMargemLucroLinked);
   updateMargemLucroToggleButton(isMargemLucroLinked);
 
   if (isMargemLucroLinked) {
@@ -1169,7 +1402,7 @@ function setFreteMlLinkState(linked, shouldRecalc = true) {
 
   setMlFreteFieldsReadonly(isFreteMlLinked);
   const sharedInput = byId('shared_frete_ml');
-  if (sharedInput) sharedInput.readOnly = !isFreteMlLinked;
+  if (sharedInput) setInputReadonly(sharedInput, !isFreteMlLinked);
 
   updateFreteMlToggleButton(isFreteMlLinked);
 
@@ -1317,6 +1550,7 @@ function resetNonFixedValuesOnReload() {
   setValue('spike_day_shopee', '2,5');
   setValue('sla_envio_magalu', '0.5');
   setValue('ads_ml', formatNumber(ML_ADS_TAXA * 100, 0));
+  setValue('impostos_ml', formatNumber(ML_IMPOSTO_SIMPLES * 100, 2));
 
   syncInitialSharedValues();
 
@@ -1887,8 +2121,8 @@ function bindMarketplaceFields(prefix) {
     const comissaoEl = byId('comissao_magalu');
     const descontoEl = byId('subsidio_magalu');
 
-    if (comissaoEl) comissaoEl.readOnly = true;
-    if (descontoEl) descontoEl.readOnly = true;
+    if (comissaoEl) setInputReadonly(comissaoEl, true);
+    if (descontoEl) setInputReadonly(descontoEl, true);
 
     if (categoriaEl) {
       categoriaEl.addEventListener('change', () => {
@@ -2090,6 +2324,48 @@ function bindButtonHoldAnimation() {
   });
 }
 
+function bindMlPvTest() {
+  const button = byId('btn_testar_pv_ml');
+  const wrap = byId('testar_pv_ml_wrap');
+  const input = byId('input_testar_pv_ml');
+  if (!button || !wrap || !input) return;
+
+  button.addEventListener('click', () => {
+    const willShow = wrap.classList.contains('hidden');
+    wrap.classList.toggle('hidden');
+
+    if (willShow) {
+      button.textContent = 'Fechar teste';
+      input.focus();
+      recalc('ml');
+      return;
+    }
+
+    button.textContent = 'Testar PV';
+    input.value = '';
+    recalc('ml');
+  });
+
+  input.addEventListener('keypress', (event) => {
+    if (event.key?.length === 1 && !/[0-9.,]/.test(event.key)) {
+      event.preventDefault();
+    }
+  });
+
+  input.addEventListener('input', () => {
+    const clean = formatCurrencyTypingValue(input.value, 2);
+    if (input.value !== clean) input.value = clean;
+    recalc('ml');
+  });
+
+  input.addEventListener('blur', () => {
+    const parsed = parseDecimal(input.value);
+    const value = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+    input.value = value > 0 ? fmtBRL.format(value) : '';
+    recalc('ml');
+  });
+}
+
 function bindMarketCardExpandToggle() {
   const formsContainer = document.querySelector('.market-flex.market-forms');
   if (!formsContainer) return;
@@ -2162,6 +2438,7 @@ function init() {
   resetNonFixedValuesOnReload();
   setMargemLucroLinkState(false, false);
   setFreteMlLinkState(false, false);
+  bindUnlockAllInputsToggle();
   bindSharedFields();
   bindMargemLucroLinkToggle();
   bindMlFreteFields();
@@ -2169,6 +2446,7 @@ function init() {
   bindSkuLookup();
   bindCopyPvValueButtons();
   bindShopeeModal();
+  bindMlPvTest();
   bindButtonHoldAnimation();
   bindMarketCardExpandToggle();
 
