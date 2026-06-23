@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Estoque Reservado - Tiny</title>
+  <link rel="icon" type="image/x-icon" href="/img/favicon/favicon.ico" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+
+<body>
+  <div class="container estoque-page">
+    <div class="card">
+      <div class="title-table">
+        <h2 class="mt-0">Produtos com saldo reservado</h2>
+        <div class="title-btn">
+          <label for="impressao_tipo" class="sr-only">Tipo de impressão</label>
+          <select id="impressao_tipo" class="input-sm" aria-label="Tipo de impressão">
+            <option value="todos">Imprimir Tudo</option>
+            <option value="baixo">Imprimir Estoque Baixo</option>
+          </select>
+          <a id="imprimir" type="button" class="btn-title" aria-pressed="false">
+            Imprimir
+          </a>
+          <a href="/" class="btn-title">Voltar para calculadora</a>
+        </div>
+      </div>
+
+      <div class="grid mt-12">
+        <div>
+          <label for="filtro_sku">Buscar por SKU</label>
+          <div class="row">
+            <input id="filtro_sku" type="text" placeholder="Digite o SKU" autocomplete="off" />
+          </div>
+        </div>
+        <div>
+          <label for="filtro_nome">Buscar por Nome</label>
+          <div class="row">
+            <input id="filtro_nome" type="text" placeholder="Digite o nome do produto" autocomplete="off" />
+          </div>
+        </div>
+      </div>
+
+      <div id="msg_estoque" class="info mt-12">Carregando...</div>
+
+      <div class="table-wrap mt-12">
+        <table>
+          <thead>
+            <tr>
+              <th class="filter">SKU ▲▼</th>
+              <th class="filter">Nome ▲▼</th>
+              <th class="filter">Estoque disponível ▲▼</th>
+              <th class="filter">Estoque reservado ▲▼</th>
+              <th class="filter">Saldo físico ▲▼</th>
+            </tr>
+          </thead>
+          <tbody id="estoque_tbody">
+            <tr>
+              <td colspan="5" class="muted">Sem dados para exibir.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/estoque-page.js" defer></script>
+</body>
+
+</html>

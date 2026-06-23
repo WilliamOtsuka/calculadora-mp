@@ -21,33 +21,49 @@ body {
   color: var(--text);
 }
 
-.unlock-all-btn {
-  position:absolute;
-  top: 40px;
-  right: 40px;
-  z-index: 100050;
+.title-btn {
+  display: flex;
+  gap: 5px;
+}
+
+.btn-title {
   padding: 8px 12px;
   border: 1px solid rgba(96, 165, 250, 0.45);
   border-radius: 999px;
   background: rgba(11, 18, 32, 0.94);
   color: #bfdbfe;
   box-shadow: 0 8px 24px rgba(2, 6, 23, 0.42);
+  text-decoration: none;
+  transition: background 120ms ease-out, color 120ms ease-out, border-color 120ms ease-out;
+  font-size: 0.9rem;
+  font-weight: 600;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
 }
 
-.unlock-all-btn:hover {
+.btn-title:hover {
   border-color: rgba(125, 211, 252, 0.7);
   background: rgba(15, 23, 42, 0.98);
   color: #dbeafe;
+  cursor: pointer;
 }
 
-.unlock-all-btn.is-unlocked {
+.btn-title:active {
+  background: rgba(15, 23, 42, 1);
+  border-color: rgba(125, 211, 252, 0.9);
+}
+
+.btn-title.is-unlocked {
   border-color: rgba(34, 197, 94, 0.55);
   background: rgba(34, 197, 94, 0.18);
   color: #bbf7d0;
 }
 
 @media (max-width: 700px) {
-  .unlock-all-btn {
+  .btn-title {
     top: 10px;
     right: 10px;
     padding: 7px 10px;
@@ -380,10 +396,16 @@ td:first-child {
   text-align: left;
 }
 
+.filter {
+  cursor: pointer;
+  user-select: none;
+}
+
 .title-table {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 70px;
   margin-bottom: 12px;
 }
 
@@ -404,15 +426,71 @@ td:first-child {
   font-size: 0.9rem;
 }
 
+.low-stock-row {
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.28);
+}
+
+.low-stock-row td {
+  color: #fecaca;
+}
+
 .info {
   color: var(--muted);
   font-size: 0.92rem;
+}
+
+.input-sm {
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #0b1220;
+  color: var(--text);
+  font-size: 0.86rem;
+  padding: 7px 10px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .btns {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.period-shortcuts {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.period-btn {
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #0b1220;
+  color: var(--text);
+  font-size: 0.86rem;
+  padding: 7px 12px;
+}
+
+.period-btn:hover {
+  border-color: #60a5fa80;
+  background: #162136;
+}
+
+.period-btn.is-active {
+  border-color: #22c55e99;
+  background: #22c55e1a;
+  color: #bbf7d0;
 }
 
 button {
@@ -759,6 +837,15 @@ button#resetBtn_all:active {
 .market-card.ml {
   --accent: #ffe600;
 }
+
+.estoque-page {
+  max-width: 1280px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
 
 /* Mercado Livre amarelo */
 .market-card.shopee {

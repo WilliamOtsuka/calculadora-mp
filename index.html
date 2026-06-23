@@ -11,14 +11,19 @@
 </head>
 
 <body>
-    <button id="unlock_all_inputs_btn" type="button" class="unlock-all-btn" aria-pressed="false">
-        Liberar bloqueados
-    </button>
     <div class="container">
         <div class="card">
             <div class="forms">
                 <div class="shared-controls">
-                    <h2>Entradas compartilhadas</h2>
+                    <div class="title-table">
+                        <h2>Entradas compartilhadas</h2>
+                        <div class="title-btn">
+                            <a id="unlock_all_inputs_btn" type="button" class="btn-title" aria-pressed="false">
+                                Liberar bloqueados
+                            </a>
+                            <a href="html/estoque.html" class="btn-title">Estoque reservado</a>
+                        </div>
+                    </div>
                     <div class="sku-search">
                         <div class="sku-box sku-box-sku">
                             <label for="tiny_sku">SKU</label>
@@ -453,7 +458,8 @@
                 </div>
                 <div id="testar_pv_ml_wrap" class="test-pv-wrap hidden">
                     <div class="row">
-                        <input id="input_testar_pv_ml" type="text" inputmode="decimal" placeholder="Digite o PV desejado" />
+                        <input id="input_testar_pv_ml" type="text" inputmode="decimal"
+                            placeholder="Digite o PV desejado" />
                     </div>
                 </div>
                 <table>
@@ -647,7 +653,7 @@
         </div>
 
         <script type="module" src="js/fontawesome-init.js"></script>
-        <script src="js/script.js" defer></script>
+        <script src="js/calc-page.js" defer></script>
         <!-- Modal de simulação -->
         <div id="modal_sim" class="modal hidden" aria-hidden="true">
             <div class="modal-overlay"></div>
