@@ -91,6 +91,11 @@ h1#ml {
   text-shadow: 0 0 3px #ffe60088;
 }
 
+h1#tray {
+  color: #43a0d6;
+  text-shadow: 0 0 3px #43a0d688;
+}
+
 h2 {
   margin: 0 0 6px;
 }
@@ -108,6 +113,11 @@ h2#shopee {
 h2#ml {
   color: #ffe600;
   text-shadow: 0 0 3px #ffe60088;
+}
+
+h2#tray {
+  color: #43a0d6;
+  text-shadow: 0 0 3px #43a0d688;
 }
 
 .subtitle {
@@ -216,6 +226,7 @@ label {
   display: block;
   font-weight: 600;
   margin: 6px 0 4px 0;
+  font-size: 1rem;
 }
 
 .muted {
@@ -331,12 +342,12 @@ input:focus {
   min-width: 0;
 }
 
-.result > div {
+.result>div {
   min-width: 0;
 }
 
 .result-main {
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   font-weight: 800;
   color: var(--accent);
   max-width: 100%;
@@ -585,6 +596,7 @@ button#resetBtn_all:hover {
     opacity: 0;
     transform: translateX(-50%) translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
@@ -722,7 +734,7 @@ button#resetBtn_all:active {
 
 .variant-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-auto-flow: column;
   gap: 16px;
 }
 
@@ -730,6 +742,13 @@ button#resetBtn_all:active {
   .variant-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.variant-grid-separator {
+  width: 1px;
+  background: #33415565;
+  margin: 0;
+
 }
 
 .variant-card {
@@ -745,6 +764,13 @@ button#resetBtn_all:active {
   font-size: 0.95rem;
   letter-spacing: .5px;
 }
+
+.variant-separator {
+  height: 1px;
+  background: #33415565;
+  margin: 12px 0;
+}
+
 
 .market-card {
   background: rgba(2, 6, 23, 0.45);
@@ -833,10 +859,6 @@ button#resetBtn_all:active {
   font-weight: 700;
 }
 
-/* Accent per marketplace */
-.market-card.ml {
-  --accent: #ffe600;
-}
 
 .estoque-page {
   max-width: 1280px;
@@ -847,17 +869,26 @@ button#resetBtn_all:active {
 }
 
 
+/* Accent per marketplace */
 /* Mercado Livre amarelo */
+.market-card.ml {
+  --accent: #ffe600;
+}
+
+/* Shopee laranja */
 .market-card.shopee {
   --accent: #ee4d2d;
 }
 
-/* Shopee laranja */
+/* Magalu azul */
 .market-card.magalu {
   --accent: #0086ff;
 }
 
-/* Magalu azul */
+/* Tray azul escuro */
+.market-card.tray {
+  --accent: #43a0d6;
+}
 
 .detail-col.ml {
   --accent: #ffe600;
@@ -869,6 +900,10 @@ button#resetBtn_all:active {
 
 .detail-col.magalu {
   --accent: #0086ff;
+}
+
+.detail-col.tray {
+  --accent: #43a0d6;
 }
 
 .market-card.ml button.primary {
@@ -887,6 +922,12 @@ button#resetBtn_all:active {
   background: #0086ff1a;
   border-color: #0086ff66;
   color: #0086ff;
+}
+
+.market-card.tray button.primary {
+  background: #43a0d61a;
+  border-color: #43a0d666;
+  color: #43a0d6;
 }
 
 .market-card button.primary:hover {
@@ -918,6 +959,11 @@ button#resetBtn_all:active {
 
 .market-card.magalu .warn,
 .detail-col.magalu .warn {
+  color: var(--accent);
+}
+
+.market-card.tray .warn,
+.detail-col.tray .warn {
   color: var(--accent);
 }
 

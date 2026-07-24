@@ -5,11 +5,12 @@ const fmtPct = new Intl.NumberFormat('pt-BR', {
   maximumFractionDigits: 2
 });
 
-const MARKETPLACES = ['ml', 'shopee', 'magalu'];
+const MARKETPLACES = ['ml', 'shopee', 'magalu', 'tray'];
 const BASE_FIELDS = ['custo', 'embalagem', 'taxa_fixa', 'margem_lucro', 'comissao', 'subsidio', 'das', 'descontos', 'outras', 'spike_day'];
-const PERCENT_FIELDS = ['margem_lucro', 'comissao', 'subsidio', 'das', 'descontos', 'outras', 'spike_day', 'ads'];
+const PERCENT_FIELDS = ['margem_lucro', 'comissao', 'subsidio', 'das', 'descontos', 'outras', 'spike_day', 'ads', 'impostos', 'cartao'];
 const ML_EXTRA_FIELDS = ['categoria', 'custos_adic', 'impostos', 'ads'];
 const MAGALU_EXTRA_FIELDS = ['categoria', 'peso_real', 'altura', 'largura', 'comprimento', 'frete_base', 'sla_envio'];
+const TRAY_EXTRA_FIELDS = ['impostos', 'cartao', 'ads'];
 const SHARED_FIELDS = ['custo', 'embalagem', 'margem_lucro', 'das', 'descontos', 'spike_day'];
 const ZERO_CURRENCY = 'R$ 0,00';
 const ML_COMISSAO_CLASSICO = 0.14;
@@ -18,6 +19,9 @@ const ML_IMPOSTO_SIMPLES = 0.09;
 const ML_ADS_TAXA = 0.05;
 const MAGALU_COMISSAO = 0.148;
 const MAGALU_FRETE_GRATIS_THRESHOLD = 79;
+const TRAY_IMPOSTOS_PADRAO = 0.10;
+const TRAY_CARTAO_PADRAO = 0.0399;
+const TRAY_ADS_PADRAO = 0.02;
 let isMargemLucroLinked = false;
 let isFreteMlLinked = false;
 let isUnlockAllInputsActive = false;
@@ -292,6 +296,7 @@ function initPvMissingAlerts() {
 function getMarketplaceFields(prefix) {
   if (prefix === 'ml') return BASE_FIELDS.concat(ML_EXTRA_FIELDS);
   if (prefix === 'magalu') return BASE_FIELDS.concat(MAGALU_EXTRA_FIELDS);
+  if (prefix === 'tray') return BASE_FIELDS.concat(TRAY_EXTRA_FIELDS);
   return BASE_FIELDS;
 }
 
@@ -1191,6 +1196,226 @@ function recalcShopee() {
   };
 }
 
+function computeTrayResult() {
+  const custo = getMoneyField('custo', 'tray');
+  const embalagem = getMoneyField('embalagem', 'tray');
+  const margemLucro = getPercentField('margem_lucro', 'tray');
+  const pImpostos = getPercentField('impostos', 'tray');
+  const pDescontos = getPercentField('descontos', 'tray');
+  const pCartao = getPercentField('cartao', 'tray');
+  const pAds = getPercentField('ads', 'tray');
+  const pOutras = getPercentField('outras', 'tray');
+
+  const totalTaxasPct = pImpostos + pDescontos + pCartao + pAds + pOutras;
+  const totalComMargem = totalTaxasPct + margemLucro;
+  const denominador = 1 - totalComMargem;
+
+  function buildTrayResultByPv(pv) {
+    if (!Number.isFinite(pv) || pv <= 0) {
+      return {
+        invalido: true,
+        custo,
+        embalagem,
+        margemLucro,
+        pImpostos,
+        pDescontos,
+        pCartao,
+        pAds,
+        pOutras,
+        totalTaxasPct,
+        totalComMargem,
+        pv: 0,
+        vImpostos: 0,
+        vDescontos: 0,
+        vCartao: 0,
+        vAds: 0,
+        vOutras: 0,
+        totalTaxasValor: 0,
+        lucro: 0,
+        margemEfetiva: 0
+      };
+    }
+
+    const vImpostos = pv * pImpostos;
+    const vDescontos = pv * pDescontos;
+    const vCartao = pv * pCartao;
+    const vAds = pv * pAds;
+    const vOutras = pv * pOutras;
+    const totalTaxasValor = vImpostos + vDescontos + vCartao + vAds + vOutras;
+    const lucro = pv - custo - embalagem - totalTaxasValor;
+    const margemEfetiva = pv > 0 ? lucro / pv : 0;
+
+    return {
+      invalido: false,
+      pv,
+      custo,
+      embalagem,
+      margemLucro,
+      pImpostos,
+      pDescontos,
+      pCartao,
+      pAds,
+      pOutras,
+      totalTaxasPct,
+      totalComMargem,
+      vImpostos,
+      vDescontos,
+      vCartao,
+      vAds,
+      vOutras,
+      totalTaxasValor,
+      lucro,
+      margemEfetiva
+    };
+  }
+
+  if (denominador <= 0) {
+    return {
+      invalido: true,
+      custo,
+      embalagem,
+      margemLucro,
+      pImpostos,
+      pDescontos,
+      pCartao,
+      pAds,
+      pOutras,
+      totalTaxasPct,
+      totalComMargem,
+      pv: 0,
+      vImpostos: 0,
+      vDescontos: 0,
+      vCartao: 0,
+      vAds: 0,
+      vOutras: 0,
+      totalTaxasValor: 0,
+      lucro: 0,
+      margemEfetiva: 0
+    };
+  }
+
+  const pv = (custo + embalagem) / denominador;
+  return buildTrayResultByPv(pv);
+}
+
+function computeTrayResultByPv(pvTeste) {
+  const base = computeTrayResult();
+  if (base.totalComMargem >= 1) {
+    return base;
+  }
+
+  const pv = Number.isFinite(pvTeste) ? Math.max(0, pvTeste) : 0;
+  const vImpostos = pv * (base.pImpostos || 0);
+  const vDescontos = pv * (base.pDescontos || 0);
+  const vCartao = pv * (base.pCartao || 0);
+  const vAds = pv * (base.pAds || 0);
+  const vOutras = pv * (base.pOutras || 0);
+  const totalTaxasValor = vImpostos + vDescontos + vCartao + vAds + vOutras;
+  const lucro = pv - (base.custo || 0) - (base.embalagem || 0) - totalTaxasValor;
+  const margemEfetiva = pv > 0 ? lucro / pv : 0;
+
+  return {
+    ...base,
+    invalido: pv <= 0,
+    pv,
+    vImpostos,
+    vDescontos,
+    vCartao,
+    vAds,
+    vOutras,
+    totalTaxasValor,
+    lucro,
+    margemEfetiva
+  };
+}
+
+function getTrayPvTestValue() {
+  const input = byId('input_testar_pv_tray');
+  if (!input) return 0;
+  const parsed = parseDecimal(input.value);
+  return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+}
+
+function isTrayPvTestVisible() {
+  const wrap = byId('testar_pv_tray_wrap');
+  return Boolean(wrap) && !wrap.classList.contains('hidden');
+}
+
+function resolveTrayDetailResult(baseResult) {
+  if (!isTrayPvTestVisible()) {
+    return baseResult;
+  }
+
+  const pvTeste = getTrayPvTestValue();
+  if (pvTeste <= 0) {
+    return baseResult;
+  }
+
+  return computeTrayResultByPv(pvTeste);
+}
+
+function fillTrayDetail(result) {
+  const safe = result || computeTrayResult();
+
+  setPercentText('pct_impostos_tray', safe.pImpostos || 0);
+  setPercentText('pct_cartao_tray', safe.pCartao || 0);
+  setPercentText('pct_ads_tray', safe.pAds || 0);
+  setPercentText('pct_descontos_tray', safe.pDescontos || 0);
+  setPercentText('pct_outras_tray', safe.pOutras || 0);
+  setText('pct_embalagem_tray', '—');
+  setText('pct_custo_total_tray', '—');
+  setPercentText('pct_lucro_tray', safe.margemEfetiva || 0);
+
+  setText('det_impostos_tray', fmtBRL.format(safe.vImpostos || 0));
+  setText('det_cartao_tray', fmtBRL.format(safe.vCartao || 0));
+  setText('det_ads_tray', fmtBRL.format(safe.vAds || 0));
+  setText('det_descontos_tray', fmtBRL.format(safe.vDescontos || 0));
+  setText('det_outras_tray', fmtBRL.format(safe.vOutras || 0));
+  setText('det_embalagem_tray', fmtBRL.format(safe.embalagem || 0));
+  const custoTotal = (safe.custo || 0) + (safe.embalagem || 0) + (safe.totalTaxasValor || 0);
+  setText('det_custo_total_tray', fmtBRL.format(custoTotal));
+  setText('det_lucro_tray', fmtBRL.format(safe.lucro || 0));
+}
+
+function recalcTray() {
+  showMessage('tray');
+
+  const impostosEl = byId('impostos_tray');
+  const cartaoEl = byId('cartao_tray');
+  const adsEl = byId('ads_tray');
+  const outrasEl = byId('outras_tray');
+
+  if (impostosEl && !String(impostosEl.value || '').trim()) {
+    impostosEl.value = formatNumber(TRAY_IMPOSTOS_PADRAO * 100, 2);
+  }
+
+  if (cartaoEl && !String(cartaoEl.value || '').trim()) {
+    cartaoEl.value = formatNumber(TRAY_CARTAO_PADRAO * 100, 2);
+  }
+
+  if (adsEl && !String(adsEl.value || '').trim()) {
+    adsEl.value = formatNumber(TRAY_ADS_PADRAO * 100, 2);
+  }
+
+  if (outrasEl && !String(outrasEl.value || '').trim()) {
+    outrasEl.value = '0';
+  }
+
+  const result = computeTrayResult();
+  setValue('total_taxas_tray', formatNumber(result.totalComMargem * 100, 3));
+
+  if (result.invalido) {
+    setText('pv_tray', '—');
+    fillTrayDetail(result);
+    showMessage('tray', 'O total de taxas e margem desejada é maior ou igual a 100%.', true);
+    return;
+  }
+
+  setText('pv_tray', fmtBRL.format(result.pv));
+  const detailResult = resolveTrayDetailResult(result);
+  fillTrayDetail(detailResult);
+}
+
 function recalcDefaultMarketplace(prefix) {
   const custo = getMoneyField('custo', prefix);
   const taxaFixa = getMoneyField('taxa_fixa', prefix);
@@ -1267,6 +1492,11 @@ function recalc(prefix) {
     return;
   }
 
+  if (prefix === 'tray') {
+    recalcTray();
+    return;
+  }
+
   recalcDefaultMarketplace(prefix);
 }
 
@@ -1280,7 +1510,7 @@ function syncSharedValue(field, value, options = {}) {
   const force = Boolean(options.force);
 
   for (const prefix of MARKETPLACES) {
-    if (field === 'margem_lucro' && !isMargemLucroLinked && !force) continue;
+    if (field === 'margem_lucro' && prefix !== 'tray' && !isMargemLucroLinked && !force) continue;
     const target = byId(`${field}_${prefix}`);
     if (target) target.value = value;
   }
@@ -1293,14 +1523,16 @@ function isNumericField(field, prefix) {
     || field === 'taxa_fixa'
     || (prefix === 'magalu' && field === 'frete_base')
     || (prefix === 'ml' && field === 'custos_adic')
-    || (prefix === 'ml' && field === 'impostos');
+    || (prefix === 'ml' && field === 'impostos')
+    || (prefix === 'tray' && field === 'cartao')
+    || (prefix === 'tray' && field === 'impostos');
 }
 
 function formatFieldOnBlur(element, field, prefix) {
   const parsed = parseDecimal(element.value);
   const value = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
 
-  if (PERCENT_FIELDS.includes(field) || (prefix === 'ml' && field === 'impostos')) {
+  if (PERCENT_FIELDS.includes(field) || (prefix === 'ml' && field === 'impostos') || (prefix === 'tray' && (field === 'impostos' || field === 'cartao'))) {
     element.value = value.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
     return;
   }
@@ -1316,7 +1548,14 @@ function formatFieldOnBlur(element, field, prefix) {
 function setMargemLucroFieldsReadonly(readonly) {
   for (const prefix of MARKETPLACES) {
     const input = byId(`margem_lucro_${prefix}`);
-    if (input) setInputReadonly(input, readonly);
+    if (!input) continue;
+
+    if (prefix === 'tray') {
+      setInputReadonly(input, true);
+      continue;
+    }
+
+    setInputReadonly(input, readonly);
   }
 }
 
@@ -1551,6 +1790,10 @@ function resetNonFixedValuesOnReload() {
   setValue('sla_envio_magalu', '0.5');
   setValue('ads_ml', formatNumber(ML_ADS_TAXA * 100, 0));
   setValue('impostos_ml', formatNumber(ML_IMPOSTO_SIMPLES * 100, 2));
+  setValue('impostos_tray', formatNumber(TRAY_IMPOSTOS_PADRAO * 100, 2));
+  setValue('cartao_tray', formatNumber(TRAY_CARTAO_PADRAO * 100, 2));
+  setValue('ads_tray', formatNumber(TRAY_ADS_PADRAO * 100, 2));
+  setValue('outras_tray', '0');
 
   syncInitialSharedValues();
 
@@ -2077,7 +2320,9 @@ function bindMarketplaceFields(prefix) {
 
     element.addEventListener('input', () => {
       if (element.tagName !== 'SELECT' && isNumericField(field, prefix)) {
-        const clean = (PERCENT_FIELDS.includes(field) || (prefix === 'ml' && field === 'impostos'))
+        const clean = (PERCENT_FIELDS.includes(field)
+          || (prefix === 'ml' && field === 'impostos')
+          || (prefix === 'tray' && (field === 'impostos' || field === 'cartao')))
           ? sanitizeAndClampNumberString(element.value, 2)
           : formatCurrencyTypingValue(element.value, 2);
         if (element.value !== clean) element.value = clean;
@@ -2366,6 +2611,48 @@ function bindMlPvTest() {
   });
 }
 
+function bindTrayPvTest() {
+  const button = byId('btn_testar_pv_tray');
+  const wrap = byId('testar_pv_tray_wrap');
+  const input = byId('input_testar_pv_tray');
+  if (!button || !wrap || !input) return;
+
+  button.addEventListener('click', () => {
+    const willShow = wrap.classList.contains('hidden');
+    wrap.classList.toggle('hidden');
+
+    if (willShow) {
+      button.textContent = 'Fechar teste';
+      input.focus();
+      recalc('tray');
+      return;
+    }
+
+    button.textContent = 'Testar PV';
+    input.value = '';
+    recalc('tray');
+  });
+
+  input.addEventListener('keypress', (event) => {
+    if (event.key?.length === 1 && !/[0-9.,]/.test(event.key)) {
+      event.preventDefault();
+    }
+  });
+
+  input.addEventListener('input', () => {
+    const clean = formatCurrencyTypingValue(input.value, 2);
+    if (input.value !== clean) input.value = clean;
+    recalc('tray');
+  });
+
+  input.addEventListener('blur', () => {
+    const parsed = parseDecimal(input.value);
+    const value = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+    input.value = value > 0 ? fmtBRL.format(value) : '';
+    recalc('tray');
+  });
+}
+
 function bindMarketCardExpandToggle() {
   const formsContainer = document.querySelector('.market-flex.market-forms');
   if (!formsContainer) return;
@@ -2447,6 +2734,7 @@ function init() {
   bindCopyPvValueButtons();
   bindShopeeModal();
   bindMlPvTest();
+  bindTrayPvTest();
   bindButtonHoldAnimation();
   bindMarketCardExpandToggle();
 
