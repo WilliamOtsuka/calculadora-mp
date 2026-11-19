@@ -19,7 +19,6 @@ const TINY_MIN_INTERVAL_MS = Math.max(0, Number(process.env.TINY_MIN_INTERVAL_MS
 const TINY_MAX_RETRIES = Math.max(0, Number(process.env.TINY_MAX_RETRIES || 4));
 const TINY_RETRY_BASE_MS = Math.max(100, Number(process.env.TINY_RETRY_BASE_MS || 800));
 const TINY_RETRY_MAX_DELAY_MS = Math.max(1000, Number(process.env.TINY_RETRY_MAX_DELAY_MS || 15000));
-
 let tinyRequestQueue = Promise.resolve();
 let tinyLastRequestStartedAt = 0;
 
@@ -320,10 +319,6 @@ async function buscarProdutoPorSKU(sku) {
 
   return produto;
 }
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
 
 app.get('/estoque-reservado', (req, res) => {
   res.sendFile(path.join(__dirname, 'html', 'estoque.html'));
@@ -772,10 +767,14 @@ app.get('/api/estoque-reservado', async (req, res) => {
   }
 });
 
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 // npx nodemon app.js
+// npx ngrok http --url=jawline-pantomime-stardom.ngrok-free.dev 3000
 // fly deploy para deployar no fly.io (configurações no fly.toml)
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor rodando na porta http://localhost:${PORT}/index.html`);
 });

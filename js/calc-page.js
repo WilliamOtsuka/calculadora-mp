@@ -2192,7 +2192,6 @@ function bindCopyPvValueButtons() {
     try {
       navigator.vibrate(pattern);
     } catch {
-      // Ignore unsupported haptic feedback cases.
     }
   }
 
